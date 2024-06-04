@@ -20,6 +20,10 @@ const packagesSchema = new Schema(
       type: Map,
       of: Number,
     },
+    isDefault: {
+      type: Boolean,
+      default: false,
+    },
   },
   {toObject: {virtuals: true}, toJSON: {virtuals: true}}
 );
