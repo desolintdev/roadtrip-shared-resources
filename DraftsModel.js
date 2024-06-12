@@ -11,10 +11,9 @@ const draftQuerySchema = new Schema({
     type: Boolean,
     default: false,
   },
-  priority: {
-    type: String,
-    enum: ['cheapest', 'bestCancellation'],
-    default: 'cheapest',
+  cheapest: {
+    type: Boolean,
+    default: false,
   },
   noOfDays: {
     type: Map,
