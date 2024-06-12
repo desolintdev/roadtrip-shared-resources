@@ -43,6 +43,10 @@ const draftsSchema = new Schema(
       type: String,
       required: true,
     },
+    checkOut: {
+      type: String,
+      required: true,
+    },
     guests: {
       type: draftGuestsSchema,
       required: true,
