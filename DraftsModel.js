@@ -57,6 +57,14 @@ const draftsSchema = new Schema(
     query: {
       type: draftQuerySchema,
     },
+    discountPercentage: {
+      type: Number,
+      default: 0,
+    },
+    profitRate: {
+      type: Number,
+      default: 0,
+    },
   },
   {timestamps: true, toObject: {virtuals: true}, toJSON: {virtuals: true}}
 );
