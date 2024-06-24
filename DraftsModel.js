@@ -20,18 +20,6 @@ const draftQuerySchema = new Schema({
   },
 });
 
-const draftGuestsSchema = new Schema({
-  _id: false,
-  adults: {
-    type: Number,
-    default: 0,
-  },
-  children: {
-    type: Array,
-    default: [],
-  },
-});
-
 const draftsSchema = new Schema(
   {
     productId: {
@@ -47,7 +35,7 @@ const draftsSchema = new Schema(
       required: true,
     },
     guests: {
-      type: draftGuestsSchema,
+      type: Number,
       required: true,
     },
     stops: {
