@@ -81,6 +81,10 @@ const draftsSchema = new Schema(
       type: Number,
       default: 0,
     },
+    cancellationDate: {
+      type: String,
+      default: '',
+    },
   },
   {timestamps: true, toObject: {virtuals: true}, toJSON: {virtuals: true}}
 );
