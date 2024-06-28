@@ -77,6 +77,10 @@ const draftsSchema = new Schema(
       type: Number,
       default: 0,
     },
+    discountAmount: {
+      type: Number,
+      default: 0,
+    },
   },
   {timestamps: true, toObject: {virtuals: true}, toJSON: {virtuals: true}}
 );
