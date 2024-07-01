@@ -81,12 +81,23 @@ const draftsSchema = new Schema(
       type: Number,
       default: 0,
     },
-    cancellationDate: {
-      type: String,
-      default: '',
-    },
   },
   {timestamps: true, toObject: {virtuals: true}, toJSON: {virtuals: true}}
 );
+
+draftsSchema.virtual('cancellationDate').get(function () {
+  let cancellationDate = '';
+  const stops = this.stops.toJSON();
+  for (let stop in stops) {
+    if (cancellationDate == '')
+      cancellationDate = stops[stop]?.hotel?.cancellationDate;
+    else if (
+      stops[stop]?.hotel?.cancellationDate === null ||
+      stops[stop]?.hotel?.cancellationDate < cancellationDate
+    )
+      cancellationDate = stops[stop]?.hotel?.cancellationDate;
+  }
+  return cancellationDate;
+});
 
 module.exports = mongoose.model('Drafts', draftsSchema);
