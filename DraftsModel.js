@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+const {DraftsStatuses} = require('./constants');
 const Schema = mongoose.Schema;
 
 const draftQuerySchema = new Schema({
@@ -80,6 +81,11 @@ const draftsSchema = new Schema(
     discountAmount: {
       type: Number,
       default: 0,
+    },
+    status: {
+      type: String,
+      enum: DraftsStatuses,
+      default: 'pending',
     },
   },
   {timestamps: true, toObject: {virtuals: true}, toJSON: {virtuals: true}}
