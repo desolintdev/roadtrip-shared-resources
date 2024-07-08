@@ -1,1 +1,1 @@
-export const DraftsStatuses = ['pending', 'booked', 'expired', 'error'];
+module.exports.DraftsStatuses = ['pending', 'booked', 'expired', 'error'];
