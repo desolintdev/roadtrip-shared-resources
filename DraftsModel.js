@@ -82,6 +82,10 @@ const draftsSchema = new Schema(
       type: Number,
       default: 0,
     },
+    profitAmount: {
+      type: Number,
+      default: 0,
+    },
     status: {
       type: String,
       enum: DraftsStatuses,
