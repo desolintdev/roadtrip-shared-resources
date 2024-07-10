@@ -62,7 +62,7 @@ const draftsSchema = new Schema(
       type: Number,
       default: 0,
     },
-    profitRate: {
+    profitPercentage: {
       type: Number,
       default: 0,
     },
