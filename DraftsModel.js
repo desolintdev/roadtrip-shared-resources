@@ -66,19 +66,7 @@ const draftsSchema = new Schema(
       type: Number,
       default: 0,
     },
-    providerRate: {
-      type: Number,
-      default: 0,
-    },
-    finalRate: {
-      type: Number,
-      default: 0,
-    },
-    amountBeforeDiscount: {
-      type: Number,
-      default: 0,
-    },
-    discountAmount: {
+    providerAmount: {
       type: Number,
       default: 0,
     },
@@ -86,10 +74,26 @@ const draftsSchema = new Schema(
       type: Number,
       default: 0,
     },
+    beforeDiscountAmount: {
+      type: Number,
+      default: 0,
+    },
+    discountAmount: {
+      type: Number,
+      default: 0,
+    },
+    finalAmount: {
+      type: Number,
+      default: 0,
+    },
     status: {
       type: String,
       enum: DraftsStatuses,
       default: 'pending',
+    },
+    tax: {
+      type: Number,
+      default: 0,
     },
   },
   {timestamps: true, toObject: {virtuals: true}, toJSON: {virtuals: true}}
