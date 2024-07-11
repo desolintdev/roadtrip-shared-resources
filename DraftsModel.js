@@ -70,6 +70,10 @@ const draftsSchema = new Schema(
       type: Number,
       default: 0,
     },
+    taxAmount: {
+      type: Number,
+      default: 0,
+    },
     profitAmount: {
       type: Number,
       default: 0,
@@ -90,10 +94,6 @@ const draftsSchema = new Schema(
       type: String,
       enum: DraftsStatuses,
       default: 'pending',
-    },
-    tax: {
-      type: Number,
-      default: 0,
     },
   },
   {timestamps: true, toObject: {virtuals: true}, toJSON: {virtuals: true}}
