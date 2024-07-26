@@ -63,6 +63,22 @@ const featuresSchema = new Schema({
   },
 });
 
+const distancesAndDurationsSchema = new Schema({
+  _id: false,
+  originName: {
+    type: String,
+    required: true,
+  },
+  distance: {
+    type: Map,
+    required: true,
+  },
+  duration: {
+    type: String,
+    required: true,
+  },
+});
+
 const productsSchema = new Schema(
   {
     title: {
@@ -97,6 +113,11 @@ const productsSchema = new Schema(
     },
     images: {
       type: [String],
+      required: true,
+    },
+    distancesAndDurations: {
+      type: Map,
+      of: distancesAndDurationsSchema,
       required: true,
     },
   },
