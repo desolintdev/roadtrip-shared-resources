@@ -74,7 +74,7 @@ const distancesAndDurationsSchema = new Schema({
     required: true,
   },
   duration: {
-    type: String,
+    type: Map,
     required: true,
   },
 });
