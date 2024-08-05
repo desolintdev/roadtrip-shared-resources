@@ -69,6 +69,10 @@ const distancesAndDurationsSchema = new Schema({
     type: String,
     required: true,
   },
+  destination: {
+    type: String,
+    required: true,
+  },
   distance: {
     type: Map,
     required: true,
