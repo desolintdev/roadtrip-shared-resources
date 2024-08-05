@@ -66,11 +66,11 @@ const featuresSchema = new Schema({
 const distancesAndDurationsSchema = new Schema({
   _id: false,
   origin: {
-    type: String,
+    type: Map,
     required: true,
   },
   destination: {
-    type: String,
+    type: Map,
     required: true,
   },
   distance: {
