@@ -65,7 +65,7 @@ const featuresSchema = new Schema({
 
 const distancesAndDurationsSchema = new Schema({
   _id: false,
-  originName: {
+  origin: {
     type: String,
     required: true,
   },
