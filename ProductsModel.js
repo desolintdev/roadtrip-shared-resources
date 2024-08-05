@@ -116,8 +116,7 @@ const productsSchema = new Schema(
       required: true,
     },
     distancesAndDurations: {
-      type: Map,
-      of: distancesAndDurationsSchema,
+      type: [distancesAndDurationsSchema],
       required: true,
     },
   },
