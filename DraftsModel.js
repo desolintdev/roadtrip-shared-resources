@@ -95,6 +95,14 @@ const draftsSchema = new Schema(
       enum: DraftsStatuses,
       default: 'pending',
     },
+    traverllers: {
+      type: Map,
+      default: null,
+    },
+    notes: {
+      type: String,
+      default: '',
+    },
   },
   {timestamps: true, toObject: {virtuals: true}, toJSON: {virtuals: true}}
 );
