@@ -95,7 +95,7 @@ const draftsSchema = new Schema(
       enum: DraftsStatuses,
       default: 'pending',
     },
-    traverllers: {
+    travellers: {
       type: Map,
       default: null,
     },
