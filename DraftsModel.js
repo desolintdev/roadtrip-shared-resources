@@ -43,6 +43,11 @@ const draftsSchema = new Schema(
       type: String,
       required: true,
     },
+    internalBookingId: {
+      type: Number,
+      required: true,
+      index: {unique: true},
+    },
     checkOut: {
       type: String,
       required: true,
