@@ -11,6 +11,9 @@ const citiesSchema = new Schema({
     of: hotelsSchema,
   },
   address: Map,
+  postId: {
+    type: Number,
+  },
 });
 
 const packagesSchema = new Schema(
