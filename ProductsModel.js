@@ -12,7 +12,7 @@ const citiesSchema = new Schema({
   },
   address: Map,
   postId: {
-    type: Number,
+    type: String,
   },
 });
 
