@@ -1,1 +1,1 @@
-module.exports.DraftsStatuses = ['pending', 'error', 'failed', 'confirmed'];
+module.exports.DraftsStatuses = ['pending', 'error', 'failed', 'completed'];
