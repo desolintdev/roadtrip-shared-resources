@@ -35,6 +35,11 @@ const draftGuestsSchema = new Schema({
 
 const draftsSchema = new Schema(
   {
+    internalBookingId: {
+      type: Number,
+      required: true,
+      index: {unique: true},
+    },
     productId: {
       type: mongoose.Types.ObjectId,
       required: true,
