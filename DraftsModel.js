@@ -100,6 +100,11 @@ const draftsSchema = new Schema(
       enum: DraftsStatuses,
       default: 'pending',
     },
+    bookingStatus: {
+      type: String,
+      enum: DraftsStatuses,
+      default: 'pending',
+    },
     travellers: {
       type: Map,
       default: null,
