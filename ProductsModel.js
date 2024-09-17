@@ -1,14 +1,9 @@
 const mongoose = require('mongoose');
 const Schema = mongoose.Schema;
 
-const hotelsSchema = new Schema({
-  name: String,
-});
-
 const citiesSchema = new Schema({
   hotels: {
-    type: Map,
-    of: hotelsSchema,
+    type: [mongoose.Schema.Types.ObjectId],
   },
   address: Map,
   postId: {
