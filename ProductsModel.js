@@ -4,6 +4,7 @@ const Schema = mongoose.Schema;
 const citiesSchema = new Schema({
   hotels: {
     type: [mongoose.Schema.Types.ObjectId],
+    ref: 'Hotels',
   },
   address: Map,
   postId: {
