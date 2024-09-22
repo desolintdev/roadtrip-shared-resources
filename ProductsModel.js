@@ -1,17 +1,6 @@
 const mongoose = require('mongoose');
 const Schema = mongoose.Schema;
 
-const citiesSchema = new Schema({
-  hotels: {
-    type: [mongoose.Schema.Types.ObjectId],
-    ref: 'Hotels',
-  },
-  address: Map,
-  postId: {
-    type: String,
-  },
-});
-
 const packagesSchema = new Schema(
   {
     _id: false,
@@ -89,9 +78,8 @@ const productsSchema = new Schema(
       required: true,
     },
     cities: {
-      type: Map,
-      of: citiesSchema,
-      required: true,
+      type: [mongoose.Schema.Types.ObjectId],
+      ref: 'Cities',
     },
     packages: {
       type: Map,
