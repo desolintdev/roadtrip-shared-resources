@@ -5,6 +5,10 @@ const citiesSchema = new Schema(
   {
     name: {
       type: String,
+      required: true,
+    },
+    label: {
+      type: String,
     },
     address: {
       type: Map,
