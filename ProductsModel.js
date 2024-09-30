@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+const {ProductsStatuses} = require('./constants');
 const Schema = mongoose.Schema;
 
 const packagesSchema = new Schema(
@@ -109,6 +110,11 @@ const productsSchema = new Schema(
     distancesAndDurations: {
       type: [distancesAndDurationsSchema],
       required: true,
+    },
+    status: {
+      type: String,
+      enum: ProductsStatuses,
+      default: 'draft',
     },
   },
   {timestamps: true, toObject: {virtuals: true}, toJSON: {virtuals: true}}
