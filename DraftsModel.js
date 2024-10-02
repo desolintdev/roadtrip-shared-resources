@@ -2,6 +2,7 @@ const mongoose = require('mongoose');
 const {DraftsStatuses, BOOKING_STATUSES} = require('./constants');
 const Schema = mongoose.Schema;
 const axios = require('axios');
+const config = require('config');
 
 const draftQuerySchema = new Schema({
   _id: false,
@@ -118,10 +119,10 @@ const draftsSchema = new Schema(
   {timestamps: true, toObject: {virtuals: true}, toJSON: {virtuals: true}}
 );
 
-draftsSchema.post('findOneAndUpdate', function (doc, next) {
+draftsSchema.post('findOneAndUpdate', async function (doc, next) {
   const update = this.getUpdate();
 
-  const updatedFields = update.$set;
+  const updatedFields = update.$set || {};
 
   let stopBookingStatusUpdatedTo = null;
 
@@ -132,14 +133,22 @@ draftsSchema.post('findOneAndUpdate', function (doc, next) {
     }
   }
 
+  async function updateBookingStatus(doc, newStatus, notificationPath) {
+    doc.bookingStatus = newStatus;
+    await doc.save();
+    axios.get(
+      `${config.get('processBackendURL')}${notificationPath}/${doc._id}`
+    );
+  }
+
   if (
     stopBookingStatusUpdatedTo === BOOKING_STATUSES.failed.value &&
     doc.bookingStatus !== BOOKING_STATUSES.failed.value
   ) {
-    doc.bookingStatus = BOOKING_STATUSES.failed.value;
-    doc.save();
-    axios.get(
-      `${config.get('processBackendURL')}/bookings/notify/failed/${doc._id}`
+    await updateBookingStatus(
+      doc,
+      BOOKING_STATUSES.failed.value,
+      '/bookings/notify/failed'
     );
   }
 
@@ -159,10 +168,10 @@ draftsSchema.post('findOneAndUpdate', function (doc, next) {
     }
 
     if (completed === Object.keys(stops).length) {
-      doc.bookingStatus = BOOKING_STATUSES.completed.value;
-      doc.save();
-      axios.get(
-        `${config.get('processBackendURL')}/bookings/notify/${doc._id}`
+      await updateBookingStatus(
+        doc,
+        BOOKING_STATUSES.completed.value,
+        '/bookings/notify'
       );
     }
   }
