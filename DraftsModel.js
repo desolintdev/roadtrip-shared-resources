@@ -1,6 +1,7 @@
 const mongoose = require('mongoose');
-const {DraftsStatuses} = require('./constants');
+const {DraftsStatuses, BOOKING_STATUSES} = require('./constants');
 const Schema = mongoose.Schema;
+const axios = require('axios');
 
 const draftQuerySchema = new Schema({
   _id: false,
@@ -116,6 +117,58 @@ const draftsSchema = new Schema(
   },
   {timestamps: true, toObject: {virtuals: true}, toJSON: {virtuals: true}}
 );
+
+draftsSchema.post('findOneAndUpdate', function (doc, next) {
+  const update = this.getUpdate();
+
+  const updatedFields = update.$set;
+
+  let stopBookingStatusUpdatedTo = null;
+
+  for (let key in updatedFields) {
+    if (key.includes('.bookingStatus')) {
+      stopBookingStatusUpdatedTo = updatedFields[key];
+      break;
+    }
+  }
+
+  if (
+    stopBookingStatusUpdatedTo === BOOKING_STATUSES.failed.value &&
+    doc.bookingStatus !== BOOKING_STATUSES.failed.value
+  ) {
+    doc.bookingStatus = BOOKING_STATUSES.failed.value;
+    doc.save();
+    axios.get(
+      `${config.get('processBackendURL')}/bookings/notify/failed/${doc._id}`
+    );
+  }
+
+  if (stopBookingStatusUpdatedTo === BOOKING_STATUSES.completed.value) {
+    const {stops: stopsObj} = doc;
+
+    const stops = stopsObj.toJSON();
+
+    let completed = 0;
+
+    for (let stop in stops) {
+      if (
+        stops[stop].hotel.bookingStatus === BOOKING_STATUSES.completed.value
+      ) {
+        completed += 1;
+      }
+    }
+
+    if (completed === Object.keys(stops).length) {
+      doc.bookingStatus = BOOKING_STATUSES.completed.value;
+      doc.save();
+      axios.get(
+        `${config.get('processBackendURL')}/bookings/notify/${doc._id}`
+      );
+    }
+  }
+
+  next();
+});
 
 draftsSchema.virtual('cancellationDate').get(function () {
   let cancellationDate = '';
