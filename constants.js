@@ -21,4 +21,7 @@ module.exports.BOOKING_STATUSES = {
   error: {
     value: 'error',
   },
+  resolved: {
+    value: 'resolved',
+  },
 };

@@ -119,6 +119,21 @@ const draftsSchema = new Schema(
   {timestamps: true, toObject: {virtuals: true}, toJSON: {virtuals: true}}
 );
 
+async function updateBookingStatus({doc, newStatus}) {
+  try {
+    let path =
+      newStatus == BOOKING_STATUSES.failed.value ? 'failed' : 'success';
+
+    doc.bookingStatus = newStatus;
+
+    await doc.save();
+
+    await axios.get(
+      `${config.get('processBackendURL')}/bookings/notify/${path}/${doc._id}`
+    );
+  } catch (error) {}
+}
+
 draftsSchema.post('findOneAndUpdate', async function (doc, next) {
   const update = this.getUpdate();
 
@@ -133,23 +148,14 @@ draftsSchema.post('findOneAndUpdate', async function (doc, next) {
     }
   }
 
-  async function updateBookingStatus(doc, newStatus, notificationPath) {
-    doc.bookingStatus = newStatus;
-    await doc.save();
-    axios.get(
-      `${config.get('processBackendURL')}${notificationPath}/${doc._id}`
-    );
-  }
-
   if (
     stopBookingStatusUpdatedTo === BOOKING_STATUSES.failed.value &&
     doc.bookingStatus !== BOOKING_STATUSES.failed.value
   ) {
-    await updateBookingStatus(
+    await updateBookingStatus({
       doc,
-      BOOKING_STATUSES.failed.value,
-      '/bookings/notify/failed'
-    );
+      newStatus: BOOKING_STATUSES.failed.value,
+    });
   }
 
   if (stopBookingStatusUpdatedTo === BOOKING_STATUSES.completed.value) {
@@ -168,11 +174,10 @@ draftsSchema.post('findOneAndUpdate', async function (doc, next) {
     }
 
     if (completed === Object.keys(stops).length) {
-      await updateBookingStatus(
+      await updateBookingStatus({
         doc,
-        BOOKING_STATUSES.completed.value,
-        '/bookings/notify'
-      );
+        newStatus: BOOKING_STATUSES.completed.value,
+      });
     }
   }
 
