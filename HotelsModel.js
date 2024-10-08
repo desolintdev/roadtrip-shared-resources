@@ -16,11 +16,11 @@ const hotelsSchema = new Schema(
       required: true,
     },
     averageRating: {
-      type: Number,
+      type: String,
       required: true,
     },
     totalNumberOfReviews: {
-      type: Number,
+      type: String,
       required: true,
     },
     summaryReviews: {
