@@ -23,6 +23,9 @@ const hotelsSchema = new Schema(
       type: Number,
       required: true,
     },
+    summaryReviews: {
+      type: Map,
+    },
   },
   {timestamps: true, toObject: {virtuals: true}, toJSON: {virtuals: true}}
 );
