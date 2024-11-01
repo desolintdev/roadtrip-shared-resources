@@ -184,7 +184,7 @@ draftsSchema.post('findOneAndUpdate', async function (doc, next) {
   let noOfResponsesArrived = 0;
 
   for (let stop in stops) {
-    if (stops[stop].hotel.providerAmount) {
+    if (stops[stop]?.hotel?.providerAmount) {
       noOfResponsesArrived += 1;
     }
   }
