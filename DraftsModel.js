@@ -189,8 +189,10 @@ draftsSchema.post('findOneAndUpdate', async function (doc, next) {
     }
   }
 
-  if (noOfResponsesArrived === Object.keys(stops).length)
+  if (noOfResponsesArrived === Object.keys(stops).length) {
     doc.discountAmount = Math.floor(doc.discountAmount);
+    await doc.save();
+  }
 
   next();
 });
