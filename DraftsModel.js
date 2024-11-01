@@ -158,11 +158,11 @@ draftsSchema.post('findOneAndUpdate', async function (doc, next) {
     });
   }
 
+  const {stops: stopsObj} = doc;
+
+  const stops = stopsObj.toJSON();
+
   if (stopBookingStatusUpdatedTo === BOOKING_STATUSES.completed.value) {
-    const {stops: stopsObj} = doc;
-
-    const stops = stopsObj.toJSON();
-
     let completed = 0;
 
     for (let stop in stops) {
@@ -180,6 +180,17 @@ draftsSchema.post('findOneAndUpdate', async function (doc, next) {
       });
     }
   }
+
+  let noOfResponsesArrived = 0;
+
+  for (let stop in stops) {
+    if (stops[stop].hotel.providerAmount) {
+      noOfResponsesArrived += 1;
+    }
+  }
+
+  if (noOfResponsesArrived === Object.keys(stops).length)
+    doc.discountAmount = Math.floor(doc.discountAmount);
 
   next();
 });
