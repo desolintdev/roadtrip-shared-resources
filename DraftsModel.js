@@ -195,9 +195,11 @@ draftsSchema.post('findOneAndUpdate', async function (doc, next) {
     doc.discountAmount = roundedDiscountAmount;
     doc.finalAmount = doc.beforeDiscountAmount - roundedDiscountAmount;
 
-    doc.status = noOfErrors > 0 ? BOOKING_STATUSES.error.value : doc.status;
     await doc.save();
   }
+
+  doc.status = noOfErrors > 0 ? BOOKING_STATUSES.error.value : doc.status;
+  await doc.save();
 
   next();
 });
