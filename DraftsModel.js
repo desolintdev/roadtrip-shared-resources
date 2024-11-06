@@ -183,16 +183,19 @@ draftsSchema.post('findOneAndUpdate', async function (doc, next) {
 
   let noOfResponsesArrived = 0;
 
+  let noOfErrors = 0;
+
   for (let stop in stops) {
-    if (stops[stop]?.hotel?.providerAmount) {
-      noOfResponsesArrived += 1;
-    }
+    if (stops[stop]?.hotel?.providerAmount) noOfResponsesArrived += 1;
+    if (stops[stop]?.error) noOfErrors += 1;
   }
 
   if (noOfResponsesArrived === Object.keys(stops).length) {
     const roundedDiscountAmount = Math.floor(doc.discountAmount);
     doc.discountAmount = roundedDiscountAmount;
     doc.finalAmount = doc.beforeDiscountAmount - roundedDiscountAmount;
+
+    doc.status = noOfErrors > 0 ? BOOKING_STATUSES.error.value : doc.status;
     await doc.save();
   }
 
