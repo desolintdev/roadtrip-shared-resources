@@ -190,7 +190,9 @@ draftsSchema.post('findOneAndUpdate', async function (doc, next) {
   }
 
   if (noOfResponsesArrived === Object.keys(stops).length) {
-    doc.discountAmount = Math.floor(doc.discountAmount);
+    const roundedDiscountAmount = Math.floor(doc.discountAmount);
+    doc.discountAmount = roundedDiscountAmount;
+    doc.finalAmount = doc.beforeDiscountAmount - roundedDiscountAmount;
     await doc.save();
   }
 
