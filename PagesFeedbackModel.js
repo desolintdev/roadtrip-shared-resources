@@ -1,7 +1,7 @@
 const mongoose = require('mongoose');
 const Schema = mongoose.Schema;
 
-const commentsSchema = new Schema(
+const pagesFeedbackSchema = new Schema(
   {
     screen: {
       type: String,
@@ -24,4 +24,4 @@ const commentsSchema = new Schema(
   {timestamps: true, toObject: {virtuals: true}, toJSON: {virtuals: true}}
 );
 
-module.exports = mongoose.model('Comments', commentsSchema);
+module.exports = mongoose.model('PagesFeedback', pagesFeedbackSchema);
