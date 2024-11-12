@@ -3,11 +3,11 @@ const Schema = mongoose.Schema;
 
 const pagesFeedbackSchema = new Schema(
   {
-    screen: {
+    page: {
       type: String,
       required: true,
     },
-    reviewType: {
+    rating: {
       type: String,
       required: true,
     },
