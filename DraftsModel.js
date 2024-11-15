@@ -115,6 +115,9 @@ const draftsSchema = new Schema(
       type: String,
       default: '',
     },
+    transactionId: {
+      type: String,
+    },
   },
   {timestamps: true, toObject: {virtuals: true}, toJSON: {virtuals: true}}
 );
