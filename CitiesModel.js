@@ -21,6 +21,9 @@ const citiesSchema = new Schema(
       type: [mongoose.Schema.Types.ObjectId],
       ref: 'Hotels',
     },
+    remarks: {
+      type: String,
+    },
   },
   {timestamps: true, toObject: {virtuals: true}, toJSON: {virtuals: true}}
 );
