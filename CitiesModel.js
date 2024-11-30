@@ -37,6 +37,10 @@ const citiesSchema = new Schema(
     displayName: {
       type: displayNameSchema,
     },
+    type: {
+      type: String,
+      default: 'city',
+    },
   },
   {timestamps: true, toObject: {virtuals: true}, toJSON: {virtuals: true}}
 );

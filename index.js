@@ -4,6 +4,7 @@ const HotelsModel = require(`./HotelsModel`);
 const ReviewsModel = require(`./ReviewsModel`);
 const CitiesModel = require(`./CitiesModel`);
 const PagesFeedbackModel = require(`./PagesFeedbackModel`);
+const RegionsModel = require(`./RegionsModel`);
 
 module.exports = {
   ProductsModel,
@@ -12,4 +13,5 @@ module.exports = {
   ReviewsModel,
   CitiesModel,
   PagesFeedbackModel,
+  RegionsModel,
 };
