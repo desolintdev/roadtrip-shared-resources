@@ -5,7 +5,7 @@ const Schema = mongoose.Schema;
 const packagesSchema = new Schema(
   {
     _id: false,
-    cities: {
+    stops: {
       type: Map,
       of: Number,
     },
@@ -18,7 +18,7 @@ const packagesSchema = new Schema(
 );
 
 packagesSchema.virtual('noOfNights').get(function () {
-  return Array.from(this.cities.values()).reduce(
+  return Array.from(this.stops?.values()).reduce(
     (total, nights) => total + nights,
     0
   );
@@ -81,6 +81,13 @@ const productsSchema = new Schema(
     cities: {
       type: [mongoose.Schema.Types.ObjectId],
       ref: 'Cities',
+    },
+    regions: {
+      type: [mongoose.Schema.Types.ObjectId],
+      ref: 'Regions',
+    },
+    stops: {
+      type: [mongoose.Schema.Types.ObjectId],
     },
     packages: {
       type: Map,
