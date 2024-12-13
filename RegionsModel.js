@@ -7,6 +7,10 @@ const regionsSchema = new Schema(
       type: String,
       required: true,
     },
+    label: {
+      type: String,
+      required: true,
+    },
     cities: {
       type: [mongoose.Schema.Types.ObjectId],
       ref: 'Cities',
