@@ -254,7 +254,7 @@ async function handleEventAfterCreate(doc, next) {
       productTitle,
     });
 
-    doc.save();
+    await doc.save();
   }
 
   next();
