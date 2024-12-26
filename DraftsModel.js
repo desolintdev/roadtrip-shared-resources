@@ -271,7 +271,7 @@ async function handleEventAfterUpdate(doc, next) {
   const updateDetails = this.getUpdate();
   const internalBookingId = doc?.internalBookingId || null;
   const productTitle = doc?.productId?.title || null;
-  const tripCreationStartTime = doc?.createdAt || null;
+  const tripCreationStartTime = doc?.tripCreationStartTime || null;
   const draftId = doc?._id || null;
 
   const updatedFields = updateDetails.$set || {};
