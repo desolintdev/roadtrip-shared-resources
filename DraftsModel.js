@@ -3,6 +3,12 @@ const {DraftsStatuses, BOOKING_STATUSES} = require('./constants');
 const Schema = mongoose.Schema;
 const axios = require('axios');
 const config = require('config');
+const {
+  tripCreationStartedEvent,
+  tripCreationSuccessEvent,
+  tripCreationFailedEvent,
+  tripCreationDurationEvent,
+} = require('./postHogUtils');
 
 const draftQuerySchema = new Schema({
   _id: false,
@@ -45,6 +51,7 @@ const draftsSchema = new Schema(
     productId: {
       type: mongoose.Types.ObjectId,
       required: true,
+      ref: 'Products',
     },
     checkIn: {
       type: String,
@@ -117,6 +124,9 @@ const draftsSchema = new Schema(
     },
     transactionId: {
       type: String,
+    },
+    tripCreationStartTime: {
+      type: Date,
     },
   },
   {timestamps: true, toObject: {virtuals: true}, toJSON: {virtuals: true}}
@@ -221,5 +231,110 @@ draftsSchema.virtual('cancellationDate').get(function () {
   }
   return cancellationDate;
 });
+
+function populateMiddlewareFn(next) {
+  this.populate(['productId']);
+  next();
+}
+
+draftsSchema.pre('save', populateMiddlewareFn);
+draftsSchema.pre('findOneAndUpdate', populateMiddlewareFn);
+
+async function handleEventAfterCreate(doc, next) {
+  if (!doc?.tripCreationStartTime) {
+    const internalBookingId = doc?.internalBookingId || null;
+    const productTitle = doc?.productId?.title || null;
+    const draftId = doc?._id;
+    doc.tripCreationStartTime = doc?.createdAt;
+
+    tripCreationStartedEvent({
+      distinctId: internalBookingId,
+      bookingId: internalBookingId,
+      draftId,
+      productTitle,
+    });
+
+    doc.save();
+  }
+
+  next();
+}
+
+draftsSchema.post('save', handleEventAfterCreate);
+
+async function handleEventAfterUpdate(doc, next) {
+  let cityName = null;
+  let errorCode = null;
+  let totalResponses = 0;
+  let totalErrors = 0;
+
+  const updateDetails = this.getUpdate();
+  const internalBookingId = doc?.internalBookingId || null;
+  const productTitle = doc?.productId?.title || null;
+  const tripCreationStartTime = doc?.createdAt || null;
+  const draftId = doc?._id || null;
+
+  const updatedFields = updateDetails.$set || {};
+
+  for (const field in updatedFields) {
+    if (updatedFields[field]?.stopName)
+      cityName = updatedFields[field]?.stopName;
+    if (updatedFields[field]?.error)
+      errorCode = updatedFields[field]?.error.code;
+  }
+
+  const {stops: stopsObject} = doc;
+  const stops = stopsObject.toJSON();
+
+  if (errorCode) {
+    tripCreationFailedEvent({
+      distinctId: internalBookingId,
+      bookingId: internalBookingId,
+      draftId,
+      productTitle,
+      city: cityName,
+      errorCode,
+    });
+  }
+
+  for (const stop in stops) {
+    if (stops[stop]?.hotel?.providerAmount) totalResponses += 1;
+    if (stops[stop]?.error) totalErrors += 1;
+  }
+
+  const totalStops = Object.keys(stops).length;
+  const totalProcessedResponses = totalResponses + totalErrors;
+
+  if (totalProcessedResponses === totalStops) {
+    const tripCreationEndTime = new Date(); // End time
+
+    const differenceInSeconds =
+      (tripCreationEndTime - tripCreationStartTime) / 1000; // Difference in milliseconds to seconds
+
+    const duration =
+      differenceInSeconds >= 60
+        ? `${(differenceInSeconds / 60).toFixed(2)} minutes`
+        : `${differenceInSeconds.toFixed(2)} seconds`;
+
+    tripCreationDurationEvent({
+      distinctId: internalBookingId,
+      bookingId: internalBookingId,
+      draftId,
+      productTitle,
+      durationSeconds: duration,
+    });
+    if (!totalErrors)
+      tripCreationSuccessEvent({
+        distinctId: internalBookingId,
+        bookingId: internalBookingId,
+        draftId,
+        productTitle,
+      });
+  }
+
+  next();
+}
+
+draftsSchema.post('findOneAndUpdate', handleEventAfterUpdate);
 
 module.exports = mongoose.model('Drafts', draftsSchema);
