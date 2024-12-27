@@ -45,6 +45,7 @@ const tripCreationFailedEvent = ({
   draftId,
   productTitle,
   city,
+  checkInMonth,
   errorCode,
 }) =>
   postHogClient.capture({
@@ -55,6 +56,7 @@ const tripCreationFailedEvent = ({
       draft_id: draftId,
       product_title: productTitle,
       city,
+      check_in_month: checkInMonth,
       error_code: errorCode,
     },
   });

@@ -265,6 +265,7 @@ draftsSchema.post('save', handleEventAfterCreate);
 async function handleEventAfterUpdate(doc, next) {
   let cityName = null;
   let errorCode = null;
+  let checkInMonth = null;
   let totalResponses = 0;
   let totalErrors = 0;
 
@@ -281,6 +282,10 @@ async function handleEventAfterUpdate(doc, next) {
       cityName = updatedFields[field]?.stopName;
     if (updatedFields[field]?.error)
       errorCode = updatedFields[field]?.error.code;
+    if (updatedFields[field]?.checkIn) {
+      const date = new Date(updatedFields[field]?.checkIn);
+      checkInMonth = date.toLocaleString('en-US', {month: 'long'});
+    }
   }
 
   const {stops: stopsObject} = doc;
@@ -293,6 +298,7 @@ async function handleEventAfterUpdate(doc, next) {
       draftId,
       productTitle,
       city: cityName,
+      checkInMonth,
       errorCode,
     });
   }
