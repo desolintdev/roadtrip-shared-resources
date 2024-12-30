@@ -32,6 +32,7 @@ const hotelsSchema = new Schema(
     },
     lastUpdated: {
       type: Date,
+      default: Date.now(),
     },
   },
   {timestamps: true, toObject: {virtuals: true}, toJSON: {virtuals: true}}
