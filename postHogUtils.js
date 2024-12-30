@@ -1,4 +1,5 @@
 const {PostHog} = require('posthog-node');
+const {POSTHOG_EVENT} = require('./constants');
 
 const postHogClient = new PostHog(process.env.POSTHOG_API_KEY, {
   host: process.env.POSTHOG_HOST,
@@ -13,7 +14,7 @@ const tripCreationStartedEvent = ({
 }) =>
   postHogClient.capture({
     distinctId,
-    event: 'road_trip_creation_started',
+    event: POSTHOG_EVENT.road_trip_creation_started.value,
     properties: {
       booking_id: bookingId,
       draft_id: draftId,
@@ -30,7 +31,7 @@ const tripCreationSuccessEvent = ({
 }) =>
   postHogClient.capture({
     distinctId,
-    event: 'road_trip_creation_success',
+    event: POSTHOG_EVENT.road_trip_creation_success.value,
     properties: {
       booking_id: bookingId,
       draft_id: draftId,
@@ -50,7 +51,7 @@ const tripCreationFailedEvent = ({
 }) =>
   postHogClient.capture({
     distinctId,
-    event: 'road_trip_creation_failed',
+    event: POSTHOG_EVENT.road_trip_creation_failed.value,
     properties: {
       booking_id: bookingId,
       draft_id: draftId,
@@ -71,7 +72,7 @@ const tripCreationDurationEvent = ({
 }) =>
   postHogClient.capture({
     distinctId,
-    event: 'road_trip_creation_duration',
+    event: POSTHOG_EVENT.road_trip_creation_duration.value,
     properties: {
       booking_id: bookingId,
       draft_id: draftId,
