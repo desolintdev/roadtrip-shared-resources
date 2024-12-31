@@ -1,5 +1,5 @@
 const mongoose = require('mongoose');
-const {DraftsStatuses, BOOKING_STATUSES} = require('./constants');
+const {DraftsStatuses, BOOKING_STATUSES, EVENT_STATUS} = require('./constants');
 const Schema = mongoose.Schema;
 const axios = require('axios');
 const config = require('config');
@@ -127,6 +127,10 @@ const draftsSchema = new Schema(
     },
     tripCreationStartTime: {
       type: Date,
+    },
+    eventStatus: {
+      type: String,
+      default: EVENT_STATUS.initialize.value,
     },
   },
   {timestamps: true, toObject: {virtuals: true}, toJSON: {virtuals: true}}
@@ -262,80 +266,95 @@ async function handleEventAfterCreate(doc, next) {
 
 draftsSchema.post('save', handleEventAfterCreate);
 
-async function handleEventAfterUpdate(doc, next) {
+function preparedEventData({updatedFields}) {
   let cityName = null;
   let errorCode = null;
   let checkInMonth = null;
-  let totalResponses = 0;
-  let totalErrors = 0;
-
-  const updateDetails = this.getUpdate();
-  const internalBookingId = doc?.internalBookingId || null;
-  const productTitle = doc?.productId?.title || null;
-  const tripCreationStartTime = doc?.tripCreationStartTime || null;
-  const draftId = doc?._id || null;
-
-  const updatedFields = updateDetails.$set || {};
 
   for (const field in updatedFields) {
     if (updatedFields[field]?.stopName)
       cityName = updatedFields[field]?.stopName;
     if (updatedFields[field]?.error)
-      errorCode = updatedFields[field]?.error.code;
+      errorCode = updatedFields[field]?.error?.code;
     if (updatedFields[field]?.checkIn) {
       const date = new Date(updatedFields[field]?.checkIn);
       checkInMonth = date.toLocaleString('en-US', {month: 'long'});
     }
   }
 
-  const {stops: stopsObject} = doc;
-  const stops = stopsObject.toJSON();
+  return {
+    cityName,
+    errorCode,
+    checkInMonth,
+  };
+}
 
-  if (errorCode) {
-    tripCreationFailedEvent({
-      distinctId: internalBookingId,
-      bookingId: internalBookingId,
-      draftId,
-      productTitle,
-      city: cityName,
-      checkInMonth,
-      errorCode,
+async function handleEventAfterUpdate(doc, next) {
+  let totalResponses = 0;
+  const updateDetails = this.getUpdate();
+
+  if (doc?.eventStatus === EVENT_STATUS.initialize.value) {
+    const internalBookingId = doc?.internalBookingId || null;
+    const productTitle = doc?.productId?.title || null;
+    const tripCreationStartTime = doc?.tripCreationStartTime || null;
+    const draftId = doc?._id || null;
+
+    const updatedFields = updateDetails.$set || {};
+
+    const {cityName, errorCode, checkInMonth} = preparedEventData({
+      updatedFields,
     });
-  }
+    const {stops: stopsObject} = doc;
+    const stops = stopsObject.toJSON();
 
-  for (const stop in stops) {
-    if (stops[stop]?.hotel?.providerAmount) totalResponses += 1;
-    if (stops[stop]?.error) totalErrors += 1;
-  }
+    if (errorCode) {
+      tripCreationFailedEvent({
+        distinctId: internalBookingId,
+        bookingId: internalBookingId,
+        draftId,
+        productTitle,
+        city: cityName,
+        checkInMonth,
+        errorCode,
+      });
+      doc.eventStatus = EVENT_STATUS.error.value;
+    }
 
-  const totalStops = Object.keys(stops).length;
-  const totalProcessedResponses = totalResponses + totalErrors;
+    for (const stop in stops) {
+      if (stops[stop]?.hotel?.providerAmount) totalResponses += 1;
+    }
 
-  if (totalProcessedResponses === totalStops) {
-    const tripCreationEndTime = new Date(); // End time
+    const totalStops = Object.keys(stops).length;
 
-    const differenceInSeconds =
-      (tripCreationEndTime - tripCreationStartTime) / 1000; // Difference in milliseconds to seconds
+    if (totalResponses === totalStops) {
+      doc.eventStatus = EVENT_STATUS.success.value;
+      const tripCreationEndTime = new Date(); // End time
 
-    const duration =
-      differenceInSeconds >= 60
-        ? `${(differenceInSeconds / 60).toFixed(2)} minutes`
-        : `${differenceInSeconds.toFixed(2)} seconds`;
+      const differenceInSeconds =
+        (tripCreationEndTime - tripCreationStartTime) / 1000; // Difference in milliseconds to seconds
 
-    tripCreationDurationEvent({
-      distinctId: internalBookingId,
-      bookingId: internalBookingId,
-      draftId,
-      productTitle,
-      durationSeconds: duration,
-    });
-    if (!totalErrors)
+      const duration =
+        differenceInSeconds >= 60
+          ? `${(differenceInSeconds / 60).toFixed(2)} minutes`
+          : `${differenceInSeconds.toFixed(2)} seconds`;
+
+      tripCreationDurationEvent({
+        distinctId: internalBookingId,
+        bookingId: internalBookingId,
+        draftId,
+        productTitle,
+        durationSeconds: duration,
+      });
+
       tripCreationSuccessEvent({
         distinctId: internalBookingId,
         bookingId: internalBookingId,
         draftId,
         productTitle,
       });
+    }
+
+    await doc.save();
   }
 
   next();
