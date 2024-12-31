@@ -40,3 +40,15 @@ module.exports.POSTHOG_EVENT = {
     value: 'road_trip_creation_duration',
   },
 };
+
+module.exports.EVENT_STATUS = {
+  initialize: {
+    value: 'initialize',
+  },
+  success: {
+    value: 'success',
+  },
+  error: {
+    value: 'error',
+  },
+};
