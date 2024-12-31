@@ -291,8 +291,6 @@ function preparedEventData({updatedFields}) {
 
 async function handleEventAfterUpdate(doc, next) {
   let totalResponses = 0;
-  let totalErrors = 0;
-
   const updateDetails = this.getUpdate();
 
   if (doc?.eventStatus === EVENT_STATUS.initialize.value) {
@@ -319,17 +317,17 @@ async function handleEventAfterUpdate(doc, next) {
         checkInMonth,
         errorCode,
       });
+      doc.eventStatus = EVENT_STATUS.error.value;
     }
 
     for (const stop in stops) {
       if (stops[stop]?.hotel?.providerAmount) totalResponses += 1;
-      if (stops[stop]?.error) totalErrors += 1;
     }
 
     const totalStops = Object.keys(stops).length;
-    const totalProcessedResponses = totalResponses + totalErrors;
 
-    if (totalProcessedResponses === totalStops) {
+    if (totalResponses === totalStops) {
+      doc.eventStatus = EVENT_STATUS.success.value;
       const tripCreationEndTime = new Date(); // End time
 
       const differenceInSeconds =
@@ -348,17 +346,12 @@ async function handleEventAfterUpdate(doc, next) {
         durationSeconds: duration,
       });
 
-      if (!totalErrors) {
-        doc.eventStatus = EVENT_STATUS.success.value;
-        tripCreationSuccessEvent({
-          distinctId: internalBookingId,
-          bookingId: internalBookingId,
-          draftId,
-          productTitle,
-        });
-      } else {
-        doc.eventStatus = EVENT_STATUS.error.value;
-      }
+      tripCreationSuccessEvent({
+        distinctId: internalBookingId,
+        bookingId: internalBookingId,
+        draftId,
+        productTitle,
+      });
     }
 
     await doc.save();
