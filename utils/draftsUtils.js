@@ -67,6 +67,14 @@ function prepareStopHotelEvent({updatedFields}) {
   };
 }
 
+// Utility function to calculate and format duration between two timestamps
+function calculateDuration(startTime, endTime) {
+  const durationInSeconds = (endTime - startTime) / 1000; // Difference in milliseconds to seconds
+  return durationInSeconds >= 60
+    ? `${(durationInSeconds / 60).toFixed(2)} minutes`
+    : `${durationInSeconds.toFixed(2)} seconds`;
+}
+
 // Sends success-related events for a trip creation process
 function sendCreationSuccessEvents({
   draftDocument,
@@ -82,14 +90,10 @@ function sendCreationSuccessEvents({
   draftDocument.timers.creationEndTime = tripCreationEndTime;
 
   // Calculate the duration of trip creation
-  const durationInSeconds =
-    (tripCreationEndTime - tripCreationStartTime) / 1000; // Difference in milliseconds to seconds
-
-  // Format the duration for logging
-  const formattedDuration =
-    durationInSeconds >= 60
-      ? `${(durationInSeconds / 60).toFixed(2)} minutes`
-      : `${durationInSeconds.toFixed(2)} seconds`;
+  const formattedDuration = calculateDuration(
+    tripCreationStartTime,
+    tripCreationEndTime
+  );
 
   // Trigger event for trip creation duration
   tripCreationDurationEvent({
