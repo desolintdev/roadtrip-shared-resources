@@ -30,7 +30,7 @@ const hotelsSchema = new Schema(
       type: mongoose.Types.ObjectId,
       ref: 'hoteldetails',
     },
-    lastUpdated: {
+    detailsLastUpdated: {
       type: Date,
       default: Date.now(),
     },

@@ -21,7 +21,7 @@ const hotelDetailsSchema = new Schema(
     hasAirConditioning: {
       type: Boolean,
     },
-    hasPets: {
+    allowsPets: {
       type: Boolean,
     },
     hasInternet: {
