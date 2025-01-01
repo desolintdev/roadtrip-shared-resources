@@ -5,10 +5,13 @@ const axios = require('axios');
 const config = require('config');
 const {
   tripCreationStartedEvent,
-  tripCreationSuccessEvent,
   tripCreationFailedEvent,
-  tripCreationDurationEvent,
-} = require('./postHogUtils');
+} = require('./utils/postHogUtils');
+const {
+  getDraftParams,
+  prepareStopHotelEvent,
+  sendCreationSuccessEvents,
+} = require('./utils/draftsUtils');
 
 const draftQuerySchema = new Schema({
   _id: false,
@@ -244,15 +247,19 @@ function populateMiddlewareFn(next) {
 draftsSchema.pre('save', populateMiddlewareFn);
 draftsSchema.pre('findOneAndUpdate', populateMiddlewareFn);
 
+// Handles events after a new draft document is created and saved
 async function handleEventAfterCreate(doc, next) {
+  // If trip creation start time is not already set, initialize it
   if (!doc?.tripCreationStartTime) {
     const internalBookingId = doc?.internalBookingId || null;
     const productTitle = doc?.productId?.title || null;
     const draftId = doc?._id;
+
+    // Set trip creation start time to document creation time
     doc.tripCreationStartTime = doc?.createdAt;
 
+    // Trigger the event indicating trip creation has started
     tripCreationStartedEvent({
-      distinctId: internalBookingId,
       bookingId: internalBookingId,
       draftId,
       productTitle,
@@ -264,102 +271,67 @@ async function handleEventAfterCreate(doc, next) {
   next();
 }
 
+// Attach the event handler to the 'save' hook of the Draft schema
 draftsSchema.post('save', handleEventAfterCreate);
 
-function preparedEventData({updatedFields}) {
-  let cityName = null;
-  let errorCode = null;
-  let checkInMonth = null;
-
-  for (const field in updatedFields) {
-    if (updatedFields[field]?.stopName)
-      cityName = updatedFields[field]?.stopName;
-    if (updatedFields[field]?.error)
-      errorCode = updatedFields[field]?.error?.code;
-    if (updatedFields[field]?.checkIn) {
-      const date = new Date(updatedFields[field]?.checkIn);
-      checkInMonth = date.toLocaleString('en-US', {month: 'long'});
-    }
-  }
-
-  return {
-    cityName,
-    errorCode,
-    checkInMonth,
-  };
-}
-
-async function handleEventAfterUpdate(doc, next) {
-  let totalResponses = 0;
+// Processes updates to draft documents and triggers appropriate events
+async function processEventAfterUpdate(draftDocument, next) {
   const updateDetails = this.getUpdate();
 
-  if (doc?.eventStatus === EVENT_STATUS.initialize.value) {
-    const internalBookingId = doc?.internalBookingId || null;
-    const productTitle = doc?.productId?.title || null;
-    const tripCreationStartTime = doc?.tripCreationStartTime || null;
-    const draftId = doc?._id || null;
+  // Check if the draft is in the "initialize" status
+  const draftIsBeingGenerated =
+    draftDocument?.eventStatus === EVENT_STATUS.initialize.value;
 
+  if (draftIsBeingGenerated) {
     const updatedFields = updateDetails.$set || {};
 
-    const {cityName, errorCode, checkInMonth} = preparedEventData({
-      updatedFields,
-    });
-    const {stops: stopsObject} = doc;
-    const stops = stopsObject.toJSON();
+    // Extract key draft-related parameters
+    const {
+      bookingId,
+      productTitle,
+      tripCreationStartTime,
+      draftId,
+      allResponsesReceived,
+    } = getDraftParams({draftDocument});
 
-    if (errorCode) {
+    // Analyze updated fields for city, error codes, and check-in details
+    const {cityName, errorCode, hasError, checkInMonth} = prepareStopHotelEvent(
+      {
+        updatedFields,
+      }
+    );
+
+    // If an error is detected in the updated fields, trigger a failure event
+    if (hasError) {
       tripCreationFailedEvent({
-        distinctId: internalBookingId,
-        bookingId: internalBookingId,
+        bookingId,
         draftId,
         productTitle,
         city: cityName,
         checkInMonth,
         errorCode,
       });
-      doc.eventStatus = EVENT_STATUS.error.value;
+      draftDocument.eventStatus = EVENT_STATUS.error.value; // Mark the draft with an error status
     }
 
-    for (const stop in stops) {
-      if (stops[stop]?.hotel?.providerAmount) totalResponses += 1;
-    }
-
-    const totalStops = Object.keys(stops).length;
-
-    if (totalResponses === totalStops) {
-      doc.eventStatus = EVENT_STATUS.success.value;
-      const tripCreationEndTime = new Date(); // End time
-
-      const differenceInSeconds =
-        (tripCreationEndTime - tripCreationStartTime) / 1000; // Difference in milliseconds to seconds
-
-      const duration =
-        differenceInSeconds >= 60
-          ? `${(differenceInSeconds / 60).toFixed(2)} minutes`
-          : `${differenceInSeconds.toFixed(2)} seconds`;
-
-      tripCreationDurationEvent({
-        distinctId: internalBookingId,
-        bookingId: internalBookingId,
-        draftId,
-        productTitle,
-        durationSeconds: duration,
-      });
-
-      tripCreationSuccessEvent({
-        distinctId: internalBookingId,
-        bookingId: internalBookingId,
+    // If all required responses have been received, trigger success events
+    if (allResponsesReceived) {
+      sendCreationSuccessEvents({
+        draftDocument,
+        tripCreationStartTime,
+        bookingId,
         draftId,
         productTitle,
       });
     }
 
-    await doc.save();
+    await draftDocument.save();
   }
 
   next();
 }
 
-draftsSchema.post('findOneAndUpdate', handleEventAfterUpdate);
+// Attach the event handler to the 'findOneAndUpdate' hook of the Draft schema
+draftsSchema.post('findOneAndUpdate', processEventAfterUpdate);
 
 module.exports = mongoose.model('Drafts', draftsSchema);
