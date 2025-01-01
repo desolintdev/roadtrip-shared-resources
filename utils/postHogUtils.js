@@ -1,19 +1,15 @@
 const {PostHog} = require('posthog-node');
-const {POSTHOG_EVENT} = require('./constants');
+const {POSTHOG_EVENT} = require('../constants');
+const config = require('config');
 
-const postHogClient = new PostHog(process.env.POSTHOG_API_KEY, {
-  host: process.env.POSTHOG_HOST,
+const postHogClient = new PostHog(config.get('posthogAPIKey'), {
+  host: config.get('posthogHost'),
 });
 
 // Road trip created event
-const tripCreationStartedEvent = ({
-  distinctId,
-  bookingId,
-  draftId,
-  productTitle,
-}) =>
+const tripCreationStartedEvent = ({bookingId, draftId, productTitle}) =>
   postHogClient.capture({
-    distinctId,
+    distinctId: bookingId,
     event: POSTHOG_EVENT.road_trip_creation_started.value,
     properties: {
       booking_id: bookingId,
@@ -23,14 +19,9 @@ const tripCreationStartedEvent = ({
   });
 
 // Road trip successfully completed event
-const tripCreationSuccessEvent = ({
-  distinctId,
-  bookingId,
-  draftId,
-  productTitle,
-}) =>
+const tripCreationSuccessEvent = ({bookingId, draftId, productTitle}) =>
   postHogClient.capture({
-    distinctId,
+    distinctId: bookingId,
     event: POSTHOG_EVENT.road_trip_creation_success.value,
     properties: {
       booking_id: bookingId,
@@ -41,7 +32,6 @@ const tripCreationSuccessEvent = ({
 
 // Road trip creation failed event
 const tripCreationFailedEvent = ({
-  distinctId,
   bookingId,
   draftId,
   productTitle,
@@ -50,7 +40,7 @@ const tripCreationFailedEvent = ({
   errorCode,
 }) =>
   postHogClient.capture({
-    distinctId,
+    distinctId: bookingId,
     event: POSTHOG_EVENT.road_trip_creation_failed.value,
     properties: {
       booking_id: bookingId,
@@ -64,20 +54,19 @@ const tripCreationFailedEvent = ({
 
 // Time consumed for creating a road trip
 const tripCreationDurationEvent = ({
-  distinctId,
   bookingId,
   draftId,
   productTitle,
-  durationSeconds,
+  formattedDuration,
 }) =>
   postHogClient.capture({
-    distinctId,
+    distinctId: bookingId,
     event: POSTHOG_EVENT.road_trip_creation_duration.value,
     properties: {
       booking_id: bookingId,
       draft_id: draftId,
       product_title: productTitle,
-      duration_seconds: durationSeconds,
+      duration_seconds: formattedDuration,
     },
   });
 
