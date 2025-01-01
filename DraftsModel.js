@@ -44,6 +44,17 @@ const draftGuestsSchema = new Schema({
   },
 });
 
+const timersSchema = new Schema({
+  _id: false,
+  creationStartTime: {type: Date, default: null},
+  creationEndTime: {type: Date, default: null},
+  recheckRatesStartTime: {type: Date, default: null},
+  recheckRatesEndTime: {type: Date, default: null},
+  paymentInitializationTime: {type: Date, default: null},
+  bookingStartTime: {type: Date, default: null},
+  bookingEndTime: {type: Date, default: null},
+});
+
 const draftsSchema = new Schema(
   {
     internalBookingId: {
@@ -128,8 +139,9 @@ const draftsSchema = new Schema(
     transactionId: {
       type: String,
     },
-    tripCreationStartTime: {
-      type: Date,
+    timers: {
+      type: timersSchema, // Use the separate timers schema here
+      default: () => ({}), // Ensure timers object exists even if not explicitly set
     },
     eventStatus: {
       type: String,
@@ -250,13 +262,13 @@ draftsSchema.pre('findOneAndUpdate', populateMiddlewareFn);
 // Handles events after a new draft document is created and saved
 async function handleEventAfterCreate(doc, next) {
   // If trip creation start time is not already set, initialize it
-  if (!doc?.tripCreationStartTime) {
+  if (!doc?.timers?.creationStartTime) {
     const internalBookingId = doc?.internalBookingId || null;
     const productTitle = doc?.productId?.title || null;
     const draftId = doc?._id;
 
     // Set trip creation start time to document creation time
-    doc.tripCreationStartTime = doc?.createdAt;
+    doc.timers.creationStartTime = doc?.createdAt;
 
     // Trigger the event indicating trip creation has started
     tripCreationStartedEvent({

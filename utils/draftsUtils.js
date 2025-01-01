@@ -11,7 +11,8 @@ function getDraftParams({draftDocument}) {
   // Extract essential details from the draft document
   const bookingId = draftDocument?.internalBookingId || null;
   const productTitle = draftDocument?.productId?.title || null;
-  const tripCreationStartTime = draftDocument?.tripCreationStartTime || null;
+  const tripCreationStartTime =
+    draftDocument?.timers?.creationStartTime || null;
   const draftId = draftDocument?._id || null;
 
   // Parse stops from the draft document and calculate the total count
@@ -74,11 +75,13 @@ function sendCreationSuccessEvents({
   draftId,
   productTitle,
 }) {
+  const tripCreationEndTime = new Date(); // End time
+
   // Update the event status to success
   draftDocument.eventStatus = EVENT_STATUS.success.value;
+  draftDocument.timers.creationEndTime = tripCreationEndTime;
 
   // Calculate the duration of trip creation
-  const tripCreationEndTime = new Date(); // End time
   const durationInSeconds =
     (tripCreationEndTime - tripCreationStartTime) / 1000; // Difference in milliseconds to seconds
 
