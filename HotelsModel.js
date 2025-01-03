@@ -28,7 +28,7 @@ const hotelsSchema = new Schema(
     },
     details: {
       type: mongoose.Types.ObjectId,
-      ref: 'hoteldetails',
+      ref: 'HotelDetails',
     },
     detailsLastUpdated: {
       type: Date,
