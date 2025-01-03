@@ -26,6 +26,14 @@ const hotelsSchema = new Schema(
     summaryReviews: {
       type: Map,
     },
+    details: {
+      type: mongoose.Types.ObjectId,
+      ref: 'HotelDetails',
+    },
+    detailsLastUpdated: {
+      type: Date,
+      default: Date.now(),
+    },
   },
   {timestamps: true, toObject: {virtuals: true}, toJSON: {virtuals: true}}
 );
