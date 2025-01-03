@@ -69,10 +69,10 @@ function prepareStopHotelEvent({updatedFields}) {
 
 // Utility function to calculate and format duration between two timestamps
 function calculateDuration(startTime, endTime) {
-  const durationInSeconds = (endTime - startTime) / 1000; // Difference in milliseconds to seconds
-  return durationInSeconds >= 60
-    ? `${(durationInSeconds / 60).toFixed(2)} minutes`
-    : `${durationInSeconds.toFixed(2)} seconds`;
+  const durationInSeconds = parseFloat(
+    ((endTime - startTime) / 1000).toFixed(2)
+  ); // Convert string back to number
+  return durationInSeconds;
 }
 
 // Sends success-related events for a trip creation process

@@ -2,8 +2,12 @@ const {PostHog} = require('posthog-node');
 const {POSTHOG_EVENT} = require('../constants');
 const config = require('config');
 
-const postHogClient = new PostHog(config.get('posthogAPIKey'), {
-  host: config.get('posthogHost'),
+const apiKey = config.get('posthogAPIKey');
+const hostUrl = config.get('posthogHost');
+const env = config.get('env');
+
+const postHogClient = new PostHog(apiKey, {
+  host: hostUrl,
 });
 
 // Road trip created event
@@ -15,6 +19,7 @@ const tripCreationStartedEvent = ({bookingId, draftId, productTitle}) =>
       booking_id: bookingId,
       draft_id: draftId,
       product_title: productTitle,
+      env,
     },
   });
 
@@ -27,6 +32,7 @@ const tripCreationSuccessEvent = ({bookingId, draftId, productTitle}) =>
       booking_id: bookingId,
       draft_id: draftId,
       product_title: productTitle,
+      env,
     },
   });
 
@@ -49,6 +55,7 @@ const tripCreationFailedEvent = ({
       city,
       check_in_month: checkInMonth,
       error_code: errorCode,
+      env,
     },
   });
 
@@ -67,6 +74,7 @@ const tripCreationDurationEvent = ({
       draft_id: draftId,
       product_title: productTitle,
       duration_seconds: formattedDuration,
+      env,
     },
   });
 
