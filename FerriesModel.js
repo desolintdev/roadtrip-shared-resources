@@ -6,7 +6,7 @@ const portSchema = new Schema({
   _id: false,
   name: {type: String, required: true},
   code: {type: String, required: true},
-  address: {type: String, required: true},
+  address: {type: String},
   latitude: {type: Number, required: true},
   longitude: {type: Number, required: true},
 });
