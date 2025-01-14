@@ -44,6 +44,14 @@ const citiesSchema = new Schema(
     filters: {
       type: [Map],
     },
+    images: {
+      type: [String],
+      default: [],
+    },
+    description: {
+      type: Map,
+      default: {},
+    },
   },
   {timestamps: true, toObject: {virtuals: true}, toJSON: {virtuals: true}}
 );

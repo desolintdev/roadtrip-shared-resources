@@ -123,6 +123,14 @@ const productsSchema = new Schema(
       enum: ProductsStatuses,
       default: 'draft',
     },
+    description: {
+      type: Map,
+      default: {},
+    },
+    estimatedPrice: {
+      type: Number,
+      default: 0,
+    },
   },
   {timestamps: true, toObject: {virtuals: true}, toJSON: {virtuals: true}}
 );
