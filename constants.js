@@ -52,3 +52,24 @@ module.exports.EVENT_STATUS = {
     value: 'error',
   },
 };
+
+module.exports.FLAG_TYPES = {
+  tag: {
+    value: 'tag',
+    name: 'Tag',
+  },
+  geoGraphicRegion: {
+    value: 'geoGraphicRegion',
+    name: 'Geo-Graphic Region',
+  },
+  theme: {
+    value: 'theme',
+    name: 'Theme',
+  },
+};
+
+module.exports.FLAG_TYPES_ARR = Object.keys(this.FLAG_TYPES).map((type) => {
+  return {name: this.FLAG_TYPES[type].name, value: this.FLAG_TYPES[type].value};
+});
+
+module.exports.FLAG_TYPES_KEYS_ARR = Object.keys(this.FLAG_TYPES);
