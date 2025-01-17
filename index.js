@@ -7,6 +7,7 @@ const PagesFeedbackModel = require(`./PagesFeedbackModel`);
 const RegionsModel = require(`./RegionsModel`);
 const HotelDetailsModel = require(`./HotelDetailsModel`);
 const FerriesModel = require(`./FerriesModel`);
+const AgentsModel = require(`./AgentsModel`);
 
 module.exports = {
   ProductsModel,
@@ -18,4 +19,5 @@ module.exports = {
   RegionsModel,
   HotelDetailsModel,
   FerriesModel,
+  AgentsModel,
 };
