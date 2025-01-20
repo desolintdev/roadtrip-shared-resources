@@ -14,7 +14,7 @@ const postHogClient = new PostHog(apiKey, {
 const tripCreationStartedEvent = ({bookingId, draftId, productTitle}) =>
   postHogClient.capture({
     distinctId: bookingId,
-    event: getPostHogEventWithParams('info.start'),
+    event: getPostHogEventWithParams({eventCategory: 'info.start'}),
     properties: {
       booking_id: bookingId,
       draft_id: draftId,
@@ -27,7 +27,7 @@ const tripCreationStartedEvent = ({bookingId, draftId, productTitle}) =>
 const tripCreationSuccessEvent = ({bookingId, draftId, productTitle}) =>
   postHogClient.capture({
     distinctId: bookingId,
-    event: getPostHogEventWithParams('success.trip_creation'),
+    event: getPostHogEventWithParams({eventCategory: 'success.trip_creation'}),
     properties: {
       booking_id: bookingId,
       draft_id: draftId,
@@ -47,7 +47,10 @@ const tripCreationFailedEvent = ({
 }) =>
   postHogClient.capture({
     distinctId: bookingId,
-    event: getPostHogEventWithParams('error', errorCode),
+    event: getPostHogEventWithParams({
+      eventCategory: 'error',
+      subCategory: errorCode,
+    }),
     properties: {
       booking_id: bookingId,
       draft_id: draftId,
@@ -67,7 +70,7 @@ const tripCreationDurationEvent = ({
 }) =>
   postHogClient.capture({
     distinctId: bookingId,
-    event: getPostHogEventWithParams('info.duration'),
+    event: getPostHogEventWithParams({eventCategory: 'info.duration'}),
     properties: {
       booking_id: bookingId,
       draft_id: draftId,

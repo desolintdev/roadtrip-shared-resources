@@ -13,33 +13,43 @@ const BOOKING_STATUSES = {
 const POSTHOG_EVENT = {
   success: {
     value: 'success',
-    trip_creation: 'trip_creation',
-    booking_completed: 'booking_completed',
+    subValues: {
+      trip_creation: 'trip_creation',
+      booking_completed: 'booking_completed',
+    },
   },
-  error: {value: 'error'},
+  error: {value: 'error'}, // No subValues needed
   info: {
     value: 'info',
-    start: 'trip_creation_start',
-    duration: 'trip_creation_duration',
+    subValues: {
+      start: 'trip_creation_start',
+      duration: 'trip_creation_duration',
+    },
   },
 };
 
-const getPostHogEvent = (path) => {
-  const keys = path.split('.'); // Split "info.created" into ["info", "created"]
-  let event = POSTHOG_EVENT;
+/**
+ * Gets the formatted event name for PostHog.
+ *
+ * Examples:
+ * getPostHogEvent('success.trip_creation') => 'success_trip_creation'
+ * getPostHogEvent('error') => 'error'
+ * getPostHogEvent('invalid.path') => undefined
+ */
+const getPostHogEvent = ({path}) => {
+  const [categoryKey, subKey] = path.split('.');
+  const category = POSTHOG_EVENT[categoryKey];
 
-  for (const key of keys) {
-    if (!event[key]) return undefined; // Return undefined if key doesn't exist
-    event = event[key];
-  }
+  if (!category) return undefined;
+  if (!subKey) return category.value; // If no subKey, return category value
 
-  return typeof event === 'string' && keys.length > 1
-    ? `${POSTHOG_EVENT[keys[0]].value}_${event}` // Append label (e.g., "info_created")
-    : event.value || event; // Return value
+  return category.subValues?.[subKey]
+    ? `${category.value}_${category.subValues[subKey]}`
+    : undefined;
 };
 
-const getPostHogEventWithParams = (eventCategory, subCategory = '') => {
-  const eventKey = getPostHogEvent(eventCategory);
+const getPostHogEventWithParams = ({eventCategory, subCategory = ''}) => {
+  const eventKey = getPostHogEvent({path: eventCategory});
   return subCategory ? `${eventKey}_${subCategory.toLowerCase()}` : eventKey;
 };
 
