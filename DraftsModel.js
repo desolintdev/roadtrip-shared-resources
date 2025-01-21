@@ -289,57 +289,56 @@ draftsSchema.post('save', handleEventAfterCreate);
 // Processes updates to draft documents and triggers appropriate events
 async function processEventAfterUpdate(draftDocument, next) {
   const updateDetails = this.getUpdate();
+  const updatedFields = updateDetails.$set || {};
 
   // Check if the draft is in the "initialize" status
   const draftIsBeingGenerated =
     draftDocument?.eventStatus === EVENT_STATUS.initialize.value;
 
-  if (draftIsBeingGenerated) {
-    const updatedFields = updateDetails.$set || {};
+  // Extract key draft-related parameters
+  const {
+    bookingId,
+    productTitle,
+    tripCreationStartTime,
+    draftId,
+    allResponsesReceived,
+    stopsCheckInDates,
+  } = getDraftParams({draftDocument});
 
-    // Extract key draft-related parameters
-    const {
-      bookingId,
-      productTitle,
-      tripCreationStartTime,
-      draftId,
-      allResponsesReceived,
-    } = getDraftParams({draftDocument});
+  // Analyze updated fields for errors
+  const {hasError, errorDetails} = prepareStopHotelEvent({
+    updatedFields,
+    draftIsBeingGenerated,
+  });
 
-    // Analyze updated fields for city, error codes, and check-in details
-    const {cityName, errorCode, hasError, checkInMonth} = prepareStopHotelEvent(
-      {
-        updatedFields,
-      }
-    );
-
-    // If an error is detected in the updated fields, trigger a failure event
-    if (hasError) {
+  // If errors are found, send each one separately
+  if (hasError) {
+    for (const {city, errorCode} of errorDetails) {
       tripCreationFailedEvent({
         bookingId,
         draftId,
         productTitle,
-        city: cityName,
-        checkInMonth,
+        city,
+        checkInMonth: stopsCheckInDates[city],
         errorCode,
       });
-      draftDocument.eventStatus = EVENT_STATUS.error.value; // Mark the draft with an error status
     }
 
-    // If all required responses have been received, trigger success events
-    if (allResponsesReceived) {
-      sendCreationSuccessEvents({
-        draftDocument,
-        tripCreationStartTime,
-        bookingId,
-        draftId,
-        productTitle,
-      });
-    }
-
-    await draftDocument.save();
+    draftDocument.eventStatus = EVENT_STATUS.error.value;
   }
 
+  // If all required responses have been received, trigger success events
+  if (allResponsesReceived && draftIsBeingGenerated) {
+    sendCreationSuccessEvents({
+      draftDocument,
+      tripCreationStartTime,
+      bookingId,
+      draftId,
+      productTitle,
+    });
+  }
+
+  await draftDocument.save();
   next();
 }
 

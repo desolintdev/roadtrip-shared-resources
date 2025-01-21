@@ -7,64 +7,63 @@ const {
 // Extracts key parameters from the draft document for event processing
 function getDraftParams({draftDocument}) {
   let totalResponses = 0;
+  const stopsCheckInDates = {};
 
   // Extract essential details from the draft document
-  const bookingId = draftDocument?.internalBookingId || null;
-  const productTitle = draftDocument?.productId?.title || null;
-  const tripCreationStartTime =
-    draftDocument?.timers?.creationStartTime || null;
-  const draftId = draftDocument?._id || null;
-
+  const {internalBookingId, productId, timers, _id, stops} = draftDocument;
+  const allStops = stops.toJSON();
   // Parse stops from the draft document and calculate the total count
-  const {stops: stopsObject} = draftDocument;
-  const stops = stopsObject.toJSON();
-  const totalStopsCount = Object.keys(stops).length;
-
-  // Count stops that have received provider amount details
-  for (const stopKey in stops) {
-    if (stops[stopKey]?.hotel?.providerAmount) totalResponses += 1;
+  for (const [stopKey, stopData] of Object.entries(allStops)) {
+    if (stopData?.checkIn) {
+      stopsCheckInDates[stopKey] = new Date(stopData.checkIn).toLocaleString(
+        'en-US',
+        {month: 'long'}
+      );
+    }
+    // Count stops that have received provider amount details
+    if (stopData?.hotel?.providerAmount) totalResponses++;
   }
 
-  // Determine if all responses for stops have been received
-  let allResponsesReceived = totalResponses === totalStopsCount;
-
   return {
-    bookingId,
-    productTitle,
-    tripCreationStartTime,
-    draftId,
-    allResponsesReceived,
+    bookingId: internalBookingId || null,
+    productTitle: productId?.title || null,
+    tripCreationStartTime: timers?.creationStartTime || null,
+    draftId: _id || null,
+    allResponsesReceived: totalResponses === Object.keys(allStops).length,
+    stopsCheckInDates,
   };
 }
 
 // Prepares details about stop-level events, including errors and check-in information
-function prepareStopHotelEvent({updatedFields}) {
-  let cityName = null;
-  let errorCode = null;
-  let checkInMonth = null;
+function prepareStopHotelEvent({updatedFields, draftIsBeingGenerated}) {
   let hasError = false;
+  const errorDetails = [];
 
-  // Analyze updated fields to gather relevant event data
-  for (const fieldKey in updatedFields) {
-    if (updatedFields[fieldKey]?.stopName) {
-      cityName = updatedFields[fieldKey]?.stopName;
-    }
-    if (updatedFields[fieldKey]?.error) {
-      errorCode = updatedFields[fieldKey]?.error?.code;
-      hasError = true; // Indicates if there are errors in the stop
-    }
-    if (updatedFields[fieldKey]?.checkIn) {
-      const date = new Date(updatedFields[fieldKey]?.checkIn);
-      checkInMonth = date.toLocaleString('en-US', {month: 'long'}); // Extract month from the check-in date
+  for (const [fieldKey, fieldValue] of Object.entries(updatedFields)) {
+    if (draftIsBeingGenerated) {
+      if (fieldValue?.error) {
+        errorDetails.push({
+          city: fieldValue?.stopName || null,
+          errorCode: fieldValue.error.code,
+        });
+        hasError = true;
+      }
+    } else if (Array.isArray(fieldValue)) {
+      // Collect multiple errors in pre-book stage
+      const cityName = fieldKey.split('.')[1]; // Extract city from key
+      for (const room of fieldValue) {
+        if (room?.error) {
+          errorDetails.push({
+            city: cityName,
+            errorCode: room.error,
+          });
+          hasError = true;
+        }
+      }
     }
   }
 
-  return {
-    cityName,
-    errorCode,
-    hasError,
-    checkInMonth,
-  };
+  return {hasError, errorDetails};
 }
 
 // Utility function to calculate and format duration between two timestamps
