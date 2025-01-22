@@ -20,7 +20,7 @@ const estimatedQuotesSchema = new Schema({
   isOpenTicket: {type: Boolean, default: false},
   hasTicketTypes: {type: Boolean, default: false},
   hasAccommodations: {type: Boolean, default: false},
-  price: {type: Number},
+  price: {type: Number, default: 0},
   departureTime: {type: String, required: true},
   arrivalTime: {type: String, required: true},
   duration: {type: Number, required: true},
