@@ -11,11 +11,31 @@ const portSchema = new Schema({
   longitude: {type: Number, required: true},
 });
 
+// Schema for Estimated Quotes
+const estimatedQuotesSchema = new Schema({
+  _id: false,
+  isAlternativeRoute: {type: Boolean, default: false},
+  selectedCurrency: {type: String, required: true},
+  isSpecialOffer: {type: Boolean, default: false},
+  isOpenTicket: {type: Boolean, default: false},
+  hasTicketTypes: {type: Boolean, default: false},
+  hasAccommodations: {type: Boolean, default: false},
+  price: {type: Number},
+  departureTime: {type: String, required: true},
+  arrivalTime: {type: String, required: true},
+  duration: {type: Number, required: true},
+  vehicles: {type: [Map], required: true},
+  accommodationMessage: {type: String},
+  petInstructions: {type: String},
+});
+
 // Schema for operator
 const operatorSchema = new Schema({
   _id: false,
   id: {type: Number, required: true},
   name: {type: String, required: true},
+  isPreferred: {type: Boolean, default: false},
+  estimatedQuotes: {type: [estimatedQuotesSchema], required: true},
 });
 
 // Main ferry schema
@@ -26,8 +46,9 @@ const ferrySchema = new Schema(
     hasVehicle: {type: Boolean, required: true},
     portFrom: {type: portSchema, required: true},
     portTo: {type: portSchema, required: true},
-    operatorDetails: {type: operatorSchema, required: true},
+    operators: {type: [operatorSchema], required: true},
     allowPets: {type: Boolean, default: false},
+    petConditions: {type: String},
     type: {type: String, default: 'ferry'},
   },
   {timestamps: true, toObject: {virtuals: true}, toJSON: {virtuals: true}}
