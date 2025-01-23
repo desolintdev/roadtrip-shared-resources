@@ -28,7 +28,6 @@ const tripsSchema = new Schema({
   _id: false,
   operator: operatorSchema,
   quote: quoteSchema,
-  hasVehicles: {type: Boolean, default: false},
   isAlternativeRoute: {type: Boolean, default: false},
   hasTicketTypes: {type: Boolean, default: false},
   hasAccommodations: {type: Boolean, default: false},
