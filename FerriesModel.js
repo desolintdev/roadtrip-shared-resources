@@ -8,14 +8,17 @@ const allowedPetsSchema = new Schema({
   maxAllowed: {type: Number},
 });
 
+const petsSchema = new Schema({
+  allowsPets: {type: Boolean, required: true},
+  petsConditions: {type: String},
+  allowedPets: {type: [allowedPetsSchema], default: []},
+});
+
 const operatorSchema = new Schema({
   _id: false,
   id: {type: Number, required: true},
   name: {type: String, required: true},
   image: {type: String},
-  allowPets: {type: Boolean, required: true},
-  petConditions: {type: String},
-  allowedPets: {type: [allowedPetsSchema], default: []},
 });
 
 const quoteSchema = new Schema({
@@ -33,7 +36,8 @@ const tripsSchema = new Schema({
   hasAccommodations: {type: Boolean, default: false},
   departureTime: {type: String, required: true},
   arrivalTime: {type: String, required: true},
-  duration: {type: Number, required: true},
+  duration: {type: String, required: true},
+  pets: {type: petsSchema},
   accommodationMessage: {type: String},
   petInstructions: {type: String},
   isPreferred: {type: Boolean, default: false},
