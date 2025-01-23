@@ -6,6 +6,7 @@ const config = require('config');
 const {
   tripCreationStartedEvent,
   tripCreationFailedEvent,
+  tripBookingCompletedEvent,
 } = require('./utils/postHogUtils');
 const {
   getDraftParams,
@@ -303,10 +304,13 @@ async function processEventAfterUpdate(draftDocument, next) {
     draftId,
     allResponsesReceived,
     stopsCheckInDates,
-  } = getDraftParams({draftDocument});
+    isBookingFullyCompleted,
+  } = getDraftParams({
+    draftDocument,
+  });
 
   // Analyze updated fields for errors
-  const {hasError, errorDetails} = prepareStopHotelEvent({
+  const {hasError, errorDetails, isBookingSuccessful} = prepareStopHotelEvent({
     updatedFields,
     draftIsBeingGenerated,
   });
@@ -327,11 +331,20 @@ async function processEventAfterUpdate(draftDocument, next) {
     draftDocument.eventStatus = EVENT_STATUS.error.value;
   }
 
-  // If all required responses have been received, trigger success events
+  // If all required responses have been received, trigger creation success events
   if (allResponsesReceived && draftIsBeingGenerated) {
     sendCreationSuccessEvents({
       draftDocument,
       tripCreationStartTime,
+      bookingId,
+      draftId,
+      productTitle,
+    });
+  }
+
+  // If the booking process has been fully completed, trigger the final event
+  if (isBookingFullyCompleted && isBookingSuccessful) {
+    tripBookingCompletedEvent({
       bookingId,
       draftId,
       productTitle,

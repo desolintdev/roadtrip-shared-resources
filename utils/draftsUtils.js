@@ -1,3 +1,4 @@
+const {BOOKING_STATUSES} = require('../../../constants/bookingConstants');
 const {EVENT_STATUS} = require('../constants');
 const {
   tripCreationSuccessEvent,
@@ -6,12 +7,16 @@ const {
 
 // Extracts key parameters from the draft document for event processing
 function getDraftParams({draftDocument}) {
-  let totalResponses = 0;
   const stopsCheckInDates = {};
+  let stopsHavingHotels = 0;
+  let fullyBookedStops = 0;
 
   // Extract essential details from the draft document
   const {internalBookingId, productId, timers, _id, stops} = draftDocument;
   const allStops = stops.toJSON();
+
+  const totalStops = Object.keys(allStops).length;
+
   // Parse stops from the draft document and calculate the total count
   for (const [stopKey, stopData] of Object.entries(allStops)) {
     if (stopData?.checkIn) {
@@ -20,8 +25,14 @@ function getDraftParams({draftDocument}) {
         {month: 'long'}
       );
     }
-    // Count stops that have received provider amount details
+
+    // Count stops that have a hotel assigned
     if (stopData?.hotel?.providerAmount) totalResponses++;
+
+    // Count successfully booked stops
+    if (stopData?.hotel?.bookingStatus === BOOKING_STATUSES.completed.value) {
+      fullyBookedStops++;
+    }
   }
 
   return {
@@ -29,18 +40,26 @@ function getDraftParams({draftDocument}) {
     productTitle: productId?.title || null,
     tripCreationStartTime: timers?.creationStartTime || null,
     draftId: _id || null,
-    allResponsesReceived: totalResponses === Object.keys(allStops).length,
+    allResponsesReceived: stopsHavingHotels === totalStops,
     stopsCheckInDates,
+    isBookingFullyCompleted: fullyBookedStops === totalStops, // Returns true if all stops are successfully booked
   };
 }
 
 // Prepares details about stop-level events, including errors and check-in information
 function prepareStopHotelEvent({updatedFields, draftIsBeingGenerated}) {
-  let hasError = false;
   const errorDetails = [];
+  let hasError = false;
+  let isBookingSuccessful = false;
 
   for (const [fieldKey, fieldValue] of Object.entries(updatedFields)) {
+    // Extract city name from fieldKey (e.g., "stops.Kreisfreie Stadt Berlin.hotel.rooms.0.error")
+    const cityMatch = fieldKey.match(/stops\.(.*?)\.hotel/);
+    const cityName = cityMatch ? cityMatch[1] : null;
+
     if (draftIsBeingGenerated) {
+      // Case 1: Gathering trip details before pre-booking
+      // This stage ensures that all relevant details are fetched.
       if (fieldValue?.error) {
         errorDetails.push({
           city: fieldValue?.stopName || null,
@@ -49,8 +68,8 @@ function prepareStopHotelEvent({updatedFields, draftIsBeingGenerated}) {
         hasError = true;
       }
     } else if (Array.isArray(fieldValue)) {
-      // Collect multiple errors in pre-book stage
-      const cityName = fieldKey.split('.')[1]; // Extract city from key
+      // Case 2: Pre-booking validation stage
+      // We check if hotel rooms are still available before initiating actual bookings.
       for (const room of fieldValue) {
         if (room?.error) {
           errorDetails.push({
@@ -60,10 +79,31 @@ function prepareStopHotelEvent({updatedFields, draftIsBeingGenerated}) {
           hasError = true;
         }
       }
+    } else if (fieldKey.includes('.error')) {
+      // Case 3: Booking initiation stage
+      // If an error occurs at this point, the booking attempt failed.
+      errorDetails.push({
+        city: cityName,
+        errorCode: fieldValue, // Direct error value from "stops.[stopName].hotel.rooms.0.error"
+      });
+      hasError = true;
+    } else if (fieldKey.includes('.bookingStatus')) {
+      // Case 4: Final booking confirmation
+      // If the booking fails, mark it as an error.
+      // If it succeeds, track successful bookings.
+      if (fieldValue === 'failed') {
+        errorDetails.push({
+          city: cityName,
+          errorCode: 'booking_failed',
+        });
+        hasError = true;
+      } else if (fieldValue === 'completed') {
+        isBookingSuccessful = true;
+      }
     }
   }
 
-  return {hasError, errorDetails};
+  return {hasError, errorDetails, isBookingSuccessful};
 }
 
 // Utility function to calculate and format duration between two timestamps

@@ -80,9 +80,25 @@ const tripCreationDurationEvent = ({
     },
   });
 
+// Road trip booking fully completed event
+const tripBookingCompletedEvent = ({bookingId, draftId, productTitle}) =>
+  postHogClient.capture({
+    distinctId: bookingId,
+    event: getPostHogEventWithParams({
+      eventCategory: 'success.booking_completed',
+    }),
+    properties: {
+      booking_id: bookingId,
+      draft_id: draftId,
+      product_title: productTitle,
+      env,
+    },
+  });
+
 module.exports = {
   tripCreationStartedEvent,
   tripCreationSuccessEvent,
   tripCreationFailedEvent,
   tripCreationDurationEvent,
+  tripBookingCompletedEvent,
 };
