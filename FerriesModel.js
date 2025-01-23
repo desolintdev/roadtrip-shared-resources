@@ -1,6 +1,48 @@
 const mongoose = require('mongoose');
 const Schema = mongoose.Schema;
 
+const allowedPetsSchema = new Schema({
+  _id: false,
+  petType: {type: String},
+  name: {type: String},
+  maxAllowed: {type: Number},
+});
+
+const petsSchema = new Schema({
+  allowed: {type: Boolean, required: true},
+  conditions: {type: String},
+  allowedTypes: {type: [allowedPetsSchema], default: []},
+});
+
+const operatorSchema = new Schema({
+  _id: false,
+  id: {type: Number, required: true},
+  name: {type: String, required: true},
+  image: {type: String},
+});
+
+const quoteSchema = new Schema({
+  _id: false,
+  price: {type: Number, required: true},
+  isSpecialOffer: {type: Boolean, required: true},
+});
+
+const tripsSchema = new Schema({
+  _id: false,
+  operator: operatorSchema,
+  quote: quoteSchema,
+  isAlternativeRoute: {type: Boolean, default: false},
+  hasTicketTypes: {type: Boolean, default: false},
+  hasAccommodations: {type: Boolean, default: false},
+  departureTime: {type: String, required: true},
+  arrivalTime: {type: String, required: true},
+  duration: {type: String, required: true},
+  pets: {type: petsSchema},
+  accommodationMessage: {type: String},
+  petInstructions: {type: String},
+  isPreferred: {type: Boolean, default: false},
+});
+
 // Schema for ports
 const portSchema = new Schema({
   _id: false,
@@ -11,45 +53,15 @@ const portSchema = new Schema({
   longitude: {type: Number, required: true},
 });
 
-// Schema for Estimated Quotes
-const estimatedQuotesSchema = new Schema({
-  _id: false,
-  isAlternativeRoute: {type: Boolean, default: false},
-  selectedCurrency: {type: String, required: true},
-  isSpecialOffer: {type: Boolean, default: false},
-  isOpenTicket: {type: Boolean, default: false},
-  hasTicketTypes: {type: Boolean, default: false},
-  hasAccommodations: {type: Boolean, default: false},
-  price: {type: Number, default: 0},
-  departureTime: {type: String, required: true},
-  arrivalTime: {type: String, required: true},
-  duration: {type: Number, required: true},
-  vehicles: {type: [Map], required: true},
-  accommodationMessage: {type: String},
-  petInstructions: {type: String},
-});
-
-// Schema for operator
-const operatorSchema = new Schema({
-  _id: false,
-  id: {type: Number, required: true},
-  name: {type: String, required: true},
-  isPreferred: {type: Boolean, default: false},
-  estimatedQuotes: {type: [estimatedQuotesSchema], required: true},
-});
-
 // Main ferry schema
 const ferrySchema = new Schema(
   {
     routeId: {type: Number, required: true, unique: true},
     routeName: {type: String, required: true},
-    hasVehicle: {type: Boolean, required: true},
     portFrom: {type: portSchema, required: true},
     portTo: {type: portSchema, required: true},
-    operators: {type: [operatorSchema], required: true},
-    allowPets: {type: Boolean, default: false},
-    petConditions: {type: String},
     type: {type: String, default: 'ferry'},
+    trips: {type: [tripsSchema], required: true, default: []},
   },
   {timestamps: true, toObject: {virtuals: true}, toJSON: {virtuals: true}}
 );
