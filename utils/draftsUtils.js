@@ -1,3 +1,4 @@
+const {DateTime} = require('luxon');
 const {BOOKING_STATUSES} = require('../../../constants/bookingConstants');
 const {EVENT_STATUS} = require('../constants');
 const {
@@ -20,14 +21,13 @@ function getDraftParams({draftDocument}) {
   // Parse stops from the draft document and calculate the total count
   for (const [stopKey, stopData] of Object.entries(allStops)) {
     if (stopData?.checkIn) {
-      stopsCheckInDates[stopKey] = new Date(stopData.checkIn).toLocaleString(
-        'en-US',
-        {month: 'long'}
-      );
+      stopsCheckInDates[stopKey] = DateTime.fromISO(stopData.checkIn)
+        .setLocale('en')
+        .toFormat('LLLL'); // Full month name
     }
 
     // Count stops that have a hotel assigned
-    if (stopData?.hotel?.providerAmount) totalResponses++;
+    if (stopData?.hotel?.id) stopsHavingHotels++;
 
     // Count successfully booked stops
     if (stopData?.hotel?.bookingStatus === BOOKING_STATUSES.completed.value) {
@@ -122,7 +122,7 @@ function sendCreationSuccessEvents({
   draftId,
   productTitle,
 }) {
-  const tripCreationEndTime = new Date(); // End time
+  const tripCreationEndTime = DateTime.now(); // End time
 
   // Update the event status to success
   draftDocument.eventStatus = EVENT_STATUS.success.value;
