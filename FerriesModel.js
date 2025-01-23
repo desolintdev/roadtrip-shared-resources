@@ -1,6 +1,13 @@
 const mongoose = require('mongoose');
 const Schema = mongoose.Schema;
 
+const allowedPetsSchema = new Schema({
+  _id: false,
+  petType: {type: String},
+  name: {type: String},
+  maxAllowed: {type: Number},
+});
+
 const operatorSchema = new Schema({
   _id: false,
   id: {type: Number, required: true},
@@ -8,7 +15,7 @@ const operatorSchema = new Schema({
   image: {type: String},
   allowPets: {type: Boolean, required: true},
   petConditions: {type: String},
-  allowedPets: {type: [Map]},
+  allowedPets: {type: [allowedPetsSchema], default: []},
 });
 
 const quoteSchema = new Schema({
