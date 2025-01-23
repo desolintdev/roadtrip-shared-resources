@@ -9,9 +9,9 @@ const allowedPetsSchema = new Schema({
 });
 
 const petsSchema = new Schema({
-  allowsPets: {type: Boolean, required: true},
-  petsConditions: {type: String},
-  allowedPets: {type: [allowedPetsSchema], default: []},
+  allowed: {type: Boolean, required: true},
+  conditions: {type: String},
+  allowedTypes: {type: [allowedPetsSchema], default: []},
 });
 
 const operatorSchema = new Schema({
