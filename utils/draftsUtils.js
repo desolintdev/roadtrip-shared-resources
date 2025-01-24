@@ -1,6 +1,6 @@
 const {DateTime} = require('luxon');
 const {BOOKING_STATUSES} = require('../../../constants/bookingConstants');
-const {EVENT_STATUS} = require('../constants');
+const {EVENT_STATUS, BOOKING_FAILED} = require('../constants');
 const {
   tripCreationSuccessEvent,
   tripCreationDurationEvent,
@@ -61,7 +61,7 @@ function prepareStopHotelEvent({updatedFields, draftIsBeingGenerated}) {
     if (draftIsBeingGenerated) {
       // Case 1: Gathering trip details before pre-booking
       // This stage ensures that all relevant details are fetched.
-      if (fieldValue?.error) {
+      if (fieldValue?.error && !hasSpecificError) {
         errorDetails.push({
           city: fieldValue?.stopName || null,
           errorCode: fieldValue.error.code,
@@ -69,7 +69,7 @@ function prepareStopHotelEvent({updatedFields, draftIsBeingGenerated}) {
         hasError = true;
         hasSpecificError = true;
       }
-    } else if (Array.isArray(fieldValue)) {
+    } else if (Array.isArray(fieldValue) && !hasSpecificError) {
       // Case 2: Pre-booking validation stage
       // We check if hotel rooms are still available before initiating actual bookings.
       for (const room of fieldValue) {
@@ -80,9 +80,10 @@ function prepareStopHotelEvent({updatedFields, draftIsBeingGenerated}) {
           });
           hasError = true;
           hasSpecificError = true;
+          break;
         }
       }
-    } else if (fieldKey.includes('.error')) {
+    } else if (fieldKey.includes('.error') && !hasSpecificError) {
       // Case 3: Booking initiation stage
       // If an error occurs at this point, the booking attempt failed.
       errorDetails.push({
@@ -98,7 +99,7 @@ function prepareStopHotelEvent({updatedFields, draftIsBeingGenerated}) {
       if (fieldValue === 'failed') {
         errorDetails.push({
           city: cityName,
-          errorCode: 'booking_failed',
+          errorCode: BOOKING_FAILED,
         });
         hasError = true;
       } else if (fieldValue === 'completed') {
@@ -110,7 +111,7 @@ function prepareStopHotelEvent({updatedFields, draftIsBeingGenerated}) {
   // Post-processing: Remove "booking_failed" if there's another specific error
   if (hasSpecificError) {
     errorDetails = errorDetails.filter(
-      (error) => error.errorCode !== 'booking_failed'
+      (error) => error.errorCode !== BOOKING_FAILED
     );
   }
 
