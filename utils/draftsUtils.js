@@ -1,6 +1,9 @@
 const {DateTime} = require('luxon');
-const {BOOKING_STATUSES} = require('../../../constants/bookingConstants');
-const {EVENT_STATUS, BOOKING_FAILED} = require('../constants');
+const {
+  EVENT_STATUS,
+  BOOKING_FAILED,
+  BOOKING_STATUSES,
+} = require('../constants');
 const {
   tripCreationSuccessEvent,
   tripCreationDurationEvent,
