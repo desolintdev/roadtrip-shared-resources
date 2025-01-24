@@ -99,13 +99,13 @@ function prepareStopHotelEvent({updatedFields, draftIsBeingGenerated}) {
       // Case 4: Final booking confirmation
       // If the booking fails, mark it as an error.
       // If it succeeds, track successful bookings.
-      if (fieldValue === 'failed') {
+      if (fieldValue === BOOKING_STATUSES.failed.value) {
         errorDetails.push({
           city: cityName,
           errorCode: BOOKING_FAILED,
         });
         hasError = true;
-      } else if (fieldValue === 'completed') {
+      } else if (fieldValue === BOOKING_STATUSES.completed.value) {
         isBookingSuccessful = true;
       }
     }
