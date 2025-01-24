@@ -137,7 +137,7 @@ function sendCreationSuccessEvents({
   draftId,
   productTitle,
 }) {
-  const tripCreationEndTime = DateTime.now(); // End time
+  const tripCreationEndTime = DateTime.now().toJSDate(); // End time
 
   // Update the event status to success
   draftDocument.eventStatus = EVENT_STATUS.success.value;
