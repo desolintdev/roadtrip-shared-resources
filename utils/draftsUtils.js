@@ -51,6 +51,7 @@ function prepareStopHotelEvent({updatedFields, draftIsBeingGenerated}) {
   const errorDetails = [];
   let hasError = false;
   let isBookingSuccessful = false;
+  let hasSpecificError = false;
 
   for (const [fieldKey, fieldValue] of Object.entries(updatedFields)) {
     // Extract city name from fieldKey (e.g., "stops.Kreisfreie Stadt Berlin.hotel.rooms.0.error")
@@ -66,6 +67,7 @@ function prepareStopHotelEvent({updatedFields, draftIsBeingGenerated}) {
           errorCode: fieldValue.error.code,
         });
         hasError = true;
+        hasSpecificError = true;
       }
     } else if (Array.isArray(fieldValue)) {
       // Case 2: Pre-booking validation stage
@@ -77,6 +79,7 @@ function prepareStopHotelEvent({updatedFields, draftIsBeingGenerated}) {
             errorCode: room.error,
           });
           hasError = true;
+          hasSpecificError = true;
         }
       }
     } else if (fieldKey.includes('.error')) {
@@ -87,6 +90,7 @@ function prepareStopHotelEvent({updatedFields, draftIsBeingGenerated}) {
         errorCode: fieldValue, // Direct error value from "stops.[stopName].hotel.rooms.0.error"
       });
       hasError = true;
+      hasSpecificError = true;
     } else if (fieldKey.includes('.bookingStatus')) {
       // Case 4: Final booking confirmation
       // If the booking fails, mark it as an error.
@@ -101,6 +105,15 @@ function prepareStopHotelEvent({updatedFields, draftIsBeingGenerated}) {
         isBookingSuccessful = true;
       }
     }
+  }
+
+  // Post-processing: Remove "booking_failed" if there's another specific error
+  if (hasSpecificError) {
+    errorDetails.forEach((error, index) => {
+      if (error.errorCode === 'booking_failed') {
+        errorDetails.splice(index, 1);
+      }
+    });
   }
 
   return {hasError, errorDetails, isBookingSuccessful};
