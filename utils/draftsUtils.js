@@ -48,7 +48,7 @@ function getDraftParams({draftDocument}) {
 
 // Prepares details about stop-level events, including errors and check-in information
 function prepareStopHotelEvent({updatedFields, draftIsBeingGenerated}) {
-  const errorDetails = [];
+  let errorDetails = [];
   let hasError = false;
   let isBookingSuccessful = false;
   let hasSpecificError = false;
@@ -109,11 +109,9 @@ function prepareStopHotelEvent({updatedFields, draftIsBeingGenerated}) {
 
   // Post-processing: Remove "booking_failed" if there's another specific error
   if (hasSpecificError) {
-    errorDetails.forEach((error, index) => {
-      if (error.errorCode === 'booking_failed') {
-        errorDetails.splice(index, 1);
-      }
-    });
+    errorDetails = errorDetails.filter(
+      (error) => error.errorCode !== 'booking_failed'
+    );
   }
 
   return {hasError, errorDetails, isBookingSuccessful};
