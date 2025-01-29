@@ -95,10 +95,33 @@ const tripBookingCompletedEvent = ({bookingId, draftId, productTitle}) =>
     },
   });
 
+function logTripCreationSuccessAndDuration({
+  bookingId,
+  draftId,
+  productTitle,
+  formattedDuration,
+}) {
+  // Trigger event for trip creation duration
+  tripCreationDurationEvent({
+    bookingId,
+    draftId,
+    productTitle,
+    formattedDuration,
+  });
+
+  // Trigger success event for trip creation
+  tripCreationSuccessEvent({
+    bookingId,
+    draftId,
+    productTitle,
+  });
+}
+
 module.exports = {
   tripCreationStartedEvent,
   tripCreationSuccessEvent,
   tripCreationFailedEvent,
   tripCreationDurationEvent,
   tripBookingCompletedEvent,
+  logTripCreationSuccessAndDuration,
 };

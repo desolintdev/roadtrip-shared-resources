@@ -1,16 +1,8 @@
 const {DateTime} = require('luxon');
-const {
-  EVENT_STATUS,
-  BOOKING_FAILED,
-  BOOKING_STATUSES,
-} = require('../constants');
-const {
-  tripCreationSuccessEvent,
-  tripCreationDurationEvent,
-} = require('./postHogUtils');
+const {BOOKING_FAILED, BOOKING_STATUSES} = require('../constants');
 
 // Extracts key parameters from the draft document for event processing
-function getDraftParams({draftDocument}) {
+function getDraftParams({draftDocument, draftIsBeingGenerated}) {
   const stopsCheckInDates = {};
   let stopsHavingHotels = 0;
   let fullyBookedStops = 0;
@@ -38,19 +30,24 @@ function getDraftParams({draftDocument}) {
     }
   }
 
+  const isAllResponsesSuccessful = stopsHavingHotels === totalStops;
+
+  const isDraftGenerationComplete =
+    isAllResponsesSuccessful && draftIsBeingGenerated;
+
   return {
     bookingId: internalBookingId || null,
     productTitle: productId?.title || null,
     tripCreationStartTime: timers?.creationStartTime || null,
     draftId: _id || null,
-    allResponsesReceived: stopsHavingHotels === totalStops,
+    isDraftGenerationComplete,
     stopsCheckInDates,
     isBookingFullyCompleted: fullyBookedStops === totalStops, // Returns true if all stops are successfully booked
   };
 }
 
 // Prepares details about stop-level events, including errors and check-in information
-function prepareStopHotelEvent({updatedFields, draftIsBeingGenerated}) {
+function evaluateHotelBookingStatus({updatedFields, draftIsBeingGenerated}) {
   let errorDetails = [];
   let hasError = false;
   let isBookingSuccessful = false;
@@ -58,7 +55,7 @@ function prepareStopHotelEvent({updatedFields, draftIsBeingGenerated}) {
 
   for (const [fieldKey, fieldValue] of Object.entries(updatedFields)) {
     // Extract city name from fieldKey (e.g., "stops.Kreisfreie Stadt Berlin.hotel.rooms.0.error")
-    const cityMatch = fieldKey.match(/stops\.(.*?)\.hotel/);
+    const cityMatch = fieldKey.match(/^stops\.([^.]*)/);
     const cityName = cityMatch ? cityMatch[1] : null;
 
     if (draftIsBeingGenerated) {
@@ -122,51 +119,18 @@ function prepareStopHotelEvent({updatedFields, draftIsBeingGenerated}) {
 }
 
 // Utility function to calculate and format duration between two timestamps
-function calculateDuration(startTime, endTime) {
-  const durationInSeconds = parseFloat(
+function calculateDuration({startTime}) {
+  const endTime = DateTime.now().toJSDate(); // End time
+
+  const formattedDuration = parseFloat(
     ((endTime - startTime) / 1000).toFixed(2)
   ); // Convert string back to number
-  return durationInSeconds;
-}
 
-// Sends success-related events for a trip creation process
-function sendCreationSuccessEvents({
-  draftDocument,
-  tripCreationStartTime,
-  bookingId,
-  draftId,
-  productTitle,
-}) {
-  const tripCreationEndTime = DateTime.now().toJSDate(); // End time
-
-  // Update the event status to success
-  draftDocument.eventStatus = EVENT_STATUS.success.value;
-  draftDocument.timers.creationEndTime = tripCreationEndTime;
-
-  // Calculate the duration of trip creation
-  const formattedDuration = calculateDuration(
-    tripCreationStartTime,
-    tripCreationEndTime
-  );
-
-  // Trigger event for trip creation duration
-  tripCreationDurationEvent({
-    bookingId,
-    draftId,
-    productTitle,
-    formattedDuration,
-  });
-
-  // Trigger success event for trip creation
-  tripCreationSuccessEvent({
-    bookingId,
-    draftId,
-    productTitle,
-  });
+  return {formattedDuration, endTime};
 }
 
 module.exports = {
   getDraftParams,
-  prepareStopHotelEvent,
-  sendCreationSuccessEvents,
+  evaluateHotelBookingStatus,
+  calculateDuration,
 };
