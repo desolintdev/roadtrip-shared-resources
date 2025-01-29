@@ -1,5 +1,5 @@
 const {PostHog} = require('posthog-node');
-const {POSTHOG_EVENT} = require('../constants');
+const {getPostHogEventWithParams} = require('../constants');
 const config = require('config');
 
 const apiKey = config.get('posthogAPIKey');
@@ -14,7 +14,7 @@ const postHogClient = new PostHog(apiKey, {
 const tripCreationStartedEvent = ({bookingId, draftId, productTitle}) =>
   postHogClient.capture({
     distinctId: bookingId,
-    event: POSTHOG_EVENT.road_trip_creation_started.value,
+    event: getPostHogEventWithParams({eventCategory: 'info.start'}),
     properties: {
       booking_id: bookingId,
       draft_id: draftId,
@@ -27,7 +27,7 @@ const tripCreationStartedEvent = ({bookingId, draftId, productTitle}) =>
 const tripCreationSuccessEvent = ({bookingId, draftId, productTitle}) =>
   postHogClient.capture({
     distinctId: bookingId,
-    event: POSTHOG_EVENT.road_trip_creation_success.value,
+    event: getPostHogEventWithParams({eventCategory: 'success.trip_creation'}),
     properties: {
       booking_id: bookingId,
       draft_id: draftId,
@@ -47,14 +47,16 @@ const tripCreationFailedEvent = ({
 }) =>
   postHogClient.capture({
     distinctId: bookingId,
-    event: POSTHOG_EVENT.road_trip_creation_failed.value,
+    event: getPostHogEventWithParams({
+      eventCategory: 'error',
+      subCategory: errorCode,
+    }),
     properties: {
       booking_id: bookingId,
       draft_id: draftId,
       product_title: productTitle,
       city,
       check_in_month: checkInMonth,
-      error_code: errorCode,
       env,
     },
   });
@@ -68,7 +70,7 @@ const tripCreationDurationEvent = ({
 }) =>
   postHogClient.capture({
     distinctId: bookingId,
-    event: POSTHOG_EVENT.road_trip_creation_duration.value,
+    event: getPostHogEventWithParams({eventCategory: 'info.duration'}),
     properties: {
       booking_id: bookingId,
       draft_id: draftId,
@@ -78,9 +80,48 @@ const tripCreationDurationEvent = ({
     },
   });
 
+// Road trip booking fully completed event
+const tripBookingCompletedEvent = ({bookingId, draftId, productTitle}) =>
+  postHogClient.capture({
+    distinctId: bookingId,
+    event: getPostHogEventWithParams({
+      eventCategory: 'success.booking_completed',
+    }),
+    properties: {
+      booking_id: bookingId,
+      draft_id: draftId,
+      product_title: productTitle,
+      env,
+    },
+  });
+
+function logTripCreationSuccessAndDuration({
+  bookingId,
+  draftId,
+  productTitle,
+  formattedDuration,
+}) {
+  // Trigger event for trip creation duration
+  tripCreationDurationEvent({
+    bookingId,
+    draftId,
+    productTitle,
+    formattedDuration,
+  });
+
+  // Trigger success event for trip creation
+  tripCreationSuccessEvent({
+    bookingId,
+    draftId,
+    productTitle,
+  });
+}
+
 module.exports = {
   tripCreationStartedEvent,
   tripCreationSuccessEvent,
   tripCreationFailedEvent,
   tripCreationDurationEvent,
+  tripBookingCompletedEvent,
+  logTripCreationSuccessAndDuration,
 };
