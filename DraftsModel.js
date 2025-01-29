@@ -6,11 +6,13 @@ const config = require('config');
 const {
   tripCreationStartedEvent,
   tripCreationFailedEvent,
+  tripBookingCompletedEvent,
+  logTripCreationSuccessAndDuration,
 } = require('./utils/postHogUtils');
 const {
   getDraftParams,
-  prepareStopHotelEvent,
-  sendCreationSuccessEvents,
+  evaluateHotelBookingStatus,
+  calculateDuration,
 } = require('./utils/draftsUtils');
 
 const draftQuerySchema = new Schema({
@@ -301,18 +303,25 @@ async function processEventAfterUpdate(draftDocument, next) {
     productTitle,
     tripCreationStartTime,
     draftId,
-    allResponsesReceived,
     stopsCheckInDates,
-  } = getDraftParams({draftDocument});
-
-  // Analyze updated fields for errors
-  const {hasError, errorDetails} = prepareStopHotelEvent({
-    updatedFields,
+    isBookingFullyCompleted,
+    needToRegisterCompleteEvents,
+  } = getDraftParams({
+    draftDocument,
     draftIsBeingGenerated,
   });
 
+  // Analyze updated fields for errors
+  const {hasError, errorDetails, isBookingSuccessful} =
+    evaluateHotelBookingStatus({
+      updatedFields,
+      draftIsBeingGenerated,
+    });
+
   // If errors are found, send each one separately
   if (hasError) {
+    draftDocument.eventStatus = EVENT_STATUS.error.value;
+
     for (const {city, errorCode} of errorDetails) {
       tripCreationFailedEvent({
         bookingId,
@@ -323,15 +332,32 @@ async function processEventAfterUpdate(draftDocument, next) {
         errorCode,
       });
     }
-
-    draftDocument.eventStatus = EVENT_STATUS.error.value;
   }
 
-  // If all required responses have been received, trigger success events
-  if (allResponsesReceived && draftIsBeingGenerated) {
-    sendCreationSuccessEvents({
-      draftDocument,
-      tripCreationStartTime,
+  // If all required responses have been received, trigger creation success events
+  if (needToRegisterCompleteEvents) {
+    // Calculate the duration of trip creation
+    const {formattedDuration, endTime: tripCreationEndTime} = calculateDuration(
+      {
+        startTime: tripCreationStartTime,
+      }
+    );
+
+    // Update the event status to success
+    draftDocument.eventStatus = EVENT_STATUS.success.value;
+    draftDocument.timers.creationEndTime = tripCreationEndTime;
+
+    logTripCreationSuccessAndDuration({
+      bookingId,
+      draftId,
+      productTitle,
+      formattedDuration,
+    });
+  }
+
+  // If the booking process has been fully completed, trigger the final event
+  if (isBookingFullyCompleted && isBookingSuccessful) {
+    tripBookingCompletedEvent({
       bookingId,
       draftId,
       productTitle,

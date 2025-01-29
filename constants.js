@@ -10,6 +10,8 @@ const BOOKING_STATUSES = {
   resolved: {value: 'resolved'},
 };
 
+const BOOKING_FAILED = 'booking_failed';
+
 const POSTHOG_EVENT = {
   success: {
     value: 'success',
@@ -81,6 +83,7 @@ module.exports = {
   FLAG_TYPES,
   FLAG_TYPES_ARR,
   FLAG_TYPES_KEYS_ARR,
+  BOOKING_FAILED,
   getPostHogEvent,
   getPostHogEventWithParams,
 };
