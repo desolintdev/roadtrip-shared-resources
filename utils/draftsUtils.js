@@ -32,7 +32,7 @@ function getDraftParams({draftDocument, draftIsBeingGenerated}) {
 
   const isAllResponsesSuccessful = stopsHavingHotels === totalStops;
 
-  const isDraftGenerationComplete =
+  const needToRegisterCompleteEvents =
     isAllResponsesSuccessful && draftIsBeingGenerated;
 
   return {
@@ -40,7 +40,7 @@ function getDraftParams({draftDocument, draftIsBeingGenerated}) {
     productTitle: productId?.title || null,
     tripCreationStartTime: timers?.creationStartTime || null,
     draftId: _id || null,
-    isDraftGenerationComplete,
+    needToRegisterCompleteEvents,
     stopsCheckInDates,
     isBookingFullyCompleted: fullyBookedStops === totalStops, // Returns true if all stops are successfully booked
   };

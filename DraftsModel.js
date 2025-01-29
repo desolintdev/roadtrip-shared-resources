@@ -305,7 +305,7 @@ async function processEventAfterUpdate(draftDocument, next) {
     draftId,
     stopsCheckInDates,
     isBookingFullyCompleted,
-    isDraftGenerationComplete,
+    needToRegisterCompleteEvents,
   } = getDraftParams({
     draftDocument,
     draftIsBeingGenerated,
@@ -335,7 +335,7 @@ async function processEventAfterUpdate(draftDocument, next) {
   }
 
   // If all required responses have been received, trigger creation success events
-  if (isDraftGenerationComplete) {
+  if (needToRegisterCompleteEvents) {
     // Calculate the duration of trip creation
     const {formattedDuration, endTime: tripCreationEndTime} = calculateDuration(
       {
