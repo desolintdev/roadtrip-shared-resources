@@ -129,14 +129,17 @@ const productsSchema = new Schema(
     geoGraphicRegions: {
       type: [mongoose.Schema.Types.ObjectId],
       ref: 'Flags',
+      default: [],
     },
     themes: {
       type: [mongoose.Schema.Types.ObjectId],
       ref: 'Flags',
+      default: [],
     },
     tags: {
       type: [mongoose.Schema.Types.ObjectId],
       ref: 'Flags',
+      default: [],
     },
     guide: {
       type: mongoose.Schema.Types.ObjectId,
