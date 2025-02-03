@@ -146,6 +146,12 @@ const productsSchema = new Schema(
       type: mongoose.Schema.Types.ObjectId,
       ref: 'Agents',
     },
+    estimatedPrice: {
+      type: Number,
+    },
+    description: {
+      type: Map,
+    },
   },
   {timestamps: true, toObject: {virtuals: true}, toJSON: {virtuals: true}}
 );
