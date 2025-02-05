@@ -81,26 +81,31 @@ const productsSchema = new Schema(
     cities: {
       type: [mongoose.Schema.Types.ObjectId],
       ref: 'Cities',
+      default: [],
     },
     regions: {
       type: [mongoose.Schema.Types.ObjectId],
       ref: 'Regions',
+      default: [],
+    },
+    ferries: {
+      type: [mongoose.Schema.Types.ObjectId],
+      ref: 'Ferries',
+      default: [],
     },
     stops: {
       type: [mongoose.Schema.Types.ObjectId],
+      default: [],
     },
     packages: {
       type: Map,
       of: packagesSchema,
-      required: true,
     },
     topics: {
       type: [topicsSchema],
-      required: true,
     },
     features: {
       type: [featuresSchema],
-      required: true,
     },
     discountPercentage: {
       type: Number,
@@ -112,16 +117,43 @@ const productsSchema = new Schema(
     },
     images: {
       type: [String],
-      required: true,
     },
     distancesAndDurations: {
       type: [distancesAndDurationsSchema],
-      required: true,
     },
     status: {
       type: String,
       enum: ProductsStatuses,
       default: 'draft',
+    },
+    geoGraphicRegions: {
+      type: [mongoose.Schema.Types.ObjectId],
+      ref: 'Flags',
+      default: [],
+    },
+    themes: {
+      type: [mongoose.Schema.Types.ObjectId],
+      ref: 'Flags',
+      default: [],
+    },
+    tags: {
+      type: [mongoose.Schema.Types.ObjectId],
+      ref: 'Flags',
+      default: [],
+    },
+    guide: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Guides',
+    },
+    agent: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Agents',
+    },
+    estimatedPrice: {
+      type: Number,
+    },
+    description: {
+      type: Map,
     },
   },
   {timestamps: true, toObject: {virtuals: true}, toJSON: {virtuals: true}}
